@@ -1,13 +1,13 @@
 import time
 import rospy
 import numpy as np 
-from geometry_msgs.msgs import Twist, Pose
+from geometry_msgs.msg import Twist, Pose
 from nav_msgs.msg import Odometry
 from bebop_msgs.msg import Ardrone3PilotingStateAttitudeChanged
 
 class StateEstimate:
     def __init__(self):
-        self.current_pos = np.array((3,))
+        self.current_pos = np.zeros((3,))
         self.current_yaw = 0.0
         self.current_state = Pose()
 
@@ -31,4 +31,13 @@ def main():
     rate = rospy.Rate(10)
     estimation = StateEstimate()
     while not rospy.is_shutdown():
+        # update current state position
+        estimation.current_state.position.x = estimation.current_pos[0]
+        estimation.current_state.position.y = estimation.current_pos[1]
+        estimation.current_state.position.z = estimation.current_pos[2]
+        
+        # update current heading
+        estimateion.current_state.orientation.z = estimation.current_yaw
+
+        rate.sleep()
         
