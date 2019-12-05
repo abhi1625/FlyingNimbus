@@ -28,4 +28,7 @@ class StateEstimate:
 
 def main():
     rospy.init_node('estimateion_node', anonymous=True)
-    
+    rate = rospy.Rate(10)
+    estimation = StateEstimate()
+    while not rospy.is_shutdown():
+        
