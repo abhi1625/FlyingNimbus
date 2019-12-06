@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import rospy 
 import smach
-from std_msgs import Empty
+from std_msgs.msg import Empty
+from Window_detection.window_detection import video_stream
 
 # define state takeoff
 
@@ -15,6 +16,7 @@ class TakeOff(smach.State):
 		rospy.loginfo('Executing take off')
 		self.takeoff_pub.publish()
 		rospy.sleep(3)
+		return 'outcome2'
 
 # define state First wall detection
 
@@ -25,6 +27,7 @@ class FirstWall(smach.State):
 	def execute(self, userdata):
 		rospy.loginfo("Executing first wall detection")
 		# call wall detection script
+		return 'outcome2'
 
 
 # define state First wall detection
@@ -36,6 +39,16 @@ class WindowDetection(smach.State):
 	def execute(self, userdata):
 		rospy.loginfo("Executing Window detection")
 		# call Window detection script
+		ob = video_stream()
+		count = 0
+		rate = rospy.Rate(10)
+		while(not rospy.is_shutdown()):
+			rate.sleep()
+			print count
+			count+=1
+
+		return 'outcome2'
+
 
 
 # define state Bridge detection
@@ -97,6 +110,7 @@ class Land(smach.State):
 		rospy.loginfo('Executing landing command')
 		self.land_pub.publish()
 		rospy.sleep(3)
+		return 'outcome2'
 
 
 # main
@@ -110,31 +124,31 @@ def main():
     with sm:
         # Add states to the container
         smach.StateMachine.add('TAKEOFF', TakeOff(), 
-                               transitions={'outcome2':'FIRSTWALL'})
-        
-        smach.StateMachine.add('FIRSTWALL', FirstWall(), 
                                transitions={'outcome2':'WINDOW'})
+        
+        # smach.StateMachine.add('FIRSTWALL', FirstWall(), 
+                               # transitions={'outcome2':'WINDOW'})
 
         smach.StateMachine.add('WINDOW', WindowDetection(), 
-                               transitions={'outcome2':'BRIDGE'})
-
-        smach.StateMachine.add('BRIDGE', BridgeDetection(), 
-                               transitions={'outcome2':'CCTAG'})
-
-        smach.StateMachine.add('CCTAG', CCTagDetection(), 
-                               transitions={'outcome2':'LANDCC'})
-
-        smach.StateMachine.add('LANDCC', Land(), 
-                               transitions={'outcome2':'TAKEOFFSW'})
-
-        smach.StateMachine.add('TAKEOFFSW', TakeOff(), 
-                               transitions={'outcome2':'SECONDWALL'})
-
-        smach.StateMachine.add('SECONDWALL', SecondWall(), 
-                               transitions={'outcome2':'SQTAG'})
-
-        smach.StateMachine.add('SQTAG', SquareTagDetection(), 
                                transitions={'outcome2':'LANDF'})
+
+        # smach.StateMachine.add('BRIDGE', BridgeDetection(), 
+        #                        transitions={'outcome2':'CCTAG'})
+
+        # smach.StateMachine.add('CCTAG', CCTagDetection(), 
+        #                        transitions={'outcome2':'LANDCC'})
+
+        # smach.StateMachine.add('LANDCC', Land(), 
+        #                        transitions={'outcome2':'TAKEOFFSW'})
+
+        # smach.StateMachine.add('TAKEOFFSW', TakeOff(), 
+        #                        transitions={'outcome2':'SECONDWALL'})
+
+        # smach.StateMachine.add('SECONDWALL', SecondWall(), 
+        #                        transitions={'outcome2':'SQTAG'})
+
+        # smach.StateMachine.add('SQTAG', SquareTagDetection(), 
+                               # transitions={'outcome2':'LANDF'})
 
         smach.StateMachine.add('LANDF', Land(), 
                                transitions={'outcome2':'SMend'})
