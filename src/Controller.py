@@ -37,9 +37,9 @@ class Controller:
         data is relative position of the target in the quadrotor's body frame
         """
         self.target.position.x = 0.0 #data.position.x
-        self.target.position.y = data.position.y
-        self.target.position.z = data.position.z
-        self.target.orientation.z = data.orientation.z 
+        self.target.position.y = 0.5 #data.position.y
+        self.target.position.z = 0.0 #data.position.z
+        self.target.orientation.z = 0.0 #data.orientation.z 
 	#print(self.target)
 
     def gen_ctrl_inputs(self):
