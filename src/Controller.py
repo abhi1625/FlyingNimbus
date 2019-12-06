@@ -36,21 +36,25 @@ class Controller:
         """
         data is relative position of the target in the quadrotor's body frame
         """
-        self.target.position.x = 0.0 #data.position.x
+        self.target.position.x = math.sqrt(3.0)/2.0 #data.position.x
         self.target.position.y = 0.5 #data.position.y
         self.target.position.z = 0.0 #data.position.z
-        self.target.orientation.z = 0.0 #data.orientation.z 
+        self.target.orientation.z = math.pi/6 #data.orientation.z 
 	#print(self.target)
 
     def gen_ctrl_inputs(self):
         # relative angle between current and target heading
         # target orientation is relative to body frame
-        delta_th = self.target.orientation.z  
+	self.target.position.x = 0.0 #math.sqrt(3.0)/2.0
+	self.target.position.y = 0.0
+	self.target.position.z = 0.0
+	self.target.orientation.z = math.pi/6
+        delta_th = self.target.orientation.z - self.state.orientation.z  
         rot_mat = np.array([[math.cos(-delta_th), -math.sin(-delta_th)],
                             [math.sin(-delta_th),  math.cos(-delta_th)]])
-        trans_target = np.array([[self.target.position.x],
-                                 [self.target.position.y]])
-	print(self.target)
+        trans_target = np.array([[self.target.position.x - self.state.position.x],
+                                 [self.target.position.y - self.state.position.y]])
+	print(self.target.position.x, self.state.position.x)
         rel_motion = np.matmul(rot_mat, trans_target)
         next_des = np.array([rel_motion[0], rel_motion[1], self.target.position.z])
 
@@ -70,16 +74,16 @@ class Controller:
 
         # clip the x, y and yaw commands
         if x_cmd > 0.3 :
-            self.vel.linear.x = 0.25
+            self.vel.linear.x = 0.3
         elif x_cmd < -0.3:
-            self.vel.linear.x = -0.25
+            self.vel.linear.x = -0.3
         else :
             self.vel.linear.x = self.gain[0]*x_cmd
 
         if y_cmd > 0.3 :
-            self.vel.linear.y = 0.25
+            self.vel.linear.y = 0.3
         elif y_cmd < -0.3:
-            self.vel.linear.y = -0.25
+            self.vel.linear.y = -0.3
         else :
             self.vel.linear.y = self.gain[1]*y_cmd
 
