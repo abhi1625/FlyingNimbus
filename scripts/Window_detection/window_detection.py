@@ -16,7 +16,7 @@ import cv2
 import numpy as np
 import math
 import copy
-from GMM.test_data import *
+# from GMM.test_data import *
 
 class video_stream:
 	def __init__(self):
