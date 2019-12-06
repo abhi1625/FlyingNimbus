@@ -39,7 +39,7 @@ def main():
         
         # update current heading
         estimation.current_state.orientation.z = estimation.current_yaw
-
+        estimation.state_pub.publish(estimation.current_state)
         rate.sleep()
 
 if __name__=='__main__':
