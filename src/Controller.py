@@ -51,17 +51,17 @@ class Controller:
         rel_motion = np.matmul(rot_mat, trans_target)
         next_des = np.array([rel_motion[0], rel_motion[1], self.target.position.z])
 
-		gains = np.array([[0.2236, 0.2657]])
-  
-		x_pos = np.array([[- next_des[0]],
-				        5.0*(self.state.position.x - self.curr_vel_odom[0])])
+        gains = np.array([[0.2236, 0.2657]])
 
-		y_pos = np.array([[- next_des[1]],
-				        5.0*(self.state.position.y - self.curr_vel_odom[1])])
-        
+        x_pos = np.array([[- next_des[0]],
+                        5.0*(self.state.position.x - self.curr_vel_odom[0])])
+
+        y_pos = np.array([[- next_des[1]],
+                        5.0*(self.state.position.y - self.curr_vel_odom[1])])
+
         # compute controller commands 
-		x_cmd = - np.matmul(gains, x_pos)
-		y_cmd = - np.matmul(gains, y_pos)
+        x_cmd = - np.matmul(gains, x_pos)
+        y_cmd = - np.matmul(gains, y_pos)
         z_cmd =   next_des[2]
         yaw_cmd = delta_th
 
