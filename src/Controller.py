@@ -53,10 +53,10 @@ class Controller:
 
         gains = np.array([[0.2236, 0.2657]])
 
-        x_pos = np.array([[- next_des[0]],
-                        5.0*(self.state.position.x - self.curr_vel_odom[0])])
-
-        y_pos = np.array([[- next_des[1]],
+        x_pos = np.array([[- next_des[0][0]],
+                        [5.0*(self.state.position.x - self.curr_vel_odom[0])]])
+	print(x_pos.shape)
+        y_pos = np.array([- next_des[1][0],
                         5.0*(self.state.position.y - self.curr_vel_odom[1])])
 
         # compute controller commands 
@@ -89,7 +89,19 @@ class Controller:
 
         self.vel.linear.z = self.gain[2]*z_cmd
 
-        self.bebop_vel_pub.publish(vel)
+        self.cmd_pub.publish(self.vel)
         self.curr_vel_odom[0] = self.state.position.x 
         self.curr_vel_odom[1] = self.state.position.y
-        return reqd_motion
+        return rel_motion
+
+
+def main():
+    rospy.init_node('Controller', anonymous=True)
+    rate = rospy.Rate(10)
+    while not rospy.is_shutdown():
+        ob = Controller()
+        ob.gen_ctrl_inputs()
+        rate.sleep()
+
+if __name__=='__main__':
+    main()
