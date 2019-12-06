@@ -28,7 +28,7 @@ class StateEstimate:
         self.current_yaw = data.yaw
 
 def main():
-    rospy.init_node('estimateion_node', anonymous=True)
+    rospy.init_node('estimation_node', anonymous=True)
     rate = rospy.Rate(10)
     estimation = StateEstimate()
     while not rospy.is_shutdown():
