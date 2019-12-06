@@ -24,7 +24,7 @@ class Controller:
         self.curr_vel_odom = np.zeros((2,))
 
         # controller gains
-        self.gain = np.array([1.0,1.5,1.0,1.0]) 
+        self.gain = np.ones((4,)) 
     
     def state_cb(self, data):
         self.state.position.x = data.position.x
@@ -45,16 +45,16 @@ class Controller:
     def gen_ctrl_inputs(self):
         # relative angle between current and target heading
         # target orientation is relative to body frame
-	self.target.position.x = self.state.position.x #math.sqrt(3.0)/2.0
-	self.target.position.y = 1.0 #self.state.position.y
-	self.target.position.z = 0.0#2.0 - self.state.position.z
-	self.target.orientation.z = self.state.orientation.z #math.pi/6
+	self.target.position.x = 0.0 #math.sqrt(3.0)/2.0
+	self.target.position.y = 0.0
+	self.target.position.z = 0.0
+	self.target.orientation.z = math.pi/6
         delta_th = self.target.orientation.z - self.state.orientation.z  
         rot_mat = np.array([[math.cos(-delta_th), -math.sin(-delta_th)],
                             [math.sin(-delta_th),  math.cos(-delta_th)]])
         trans_target = np.array([[self.target.position.x - self.state.position.x],
                                  [self.target.position.y - self.state.position.y]])
-	print(self.target.orientation.z, delta_th)
+	print(delta_th)
         rel_motion = np.matmul(rot_mat, trans_target)
         next_des = np.array([rel_motion[0], rel_motion[1], self.target.position.z])
 
@@ -70,7 +70,7 @@ class Controller:
         x_cmd = - np.matmul(gains, x_pos)[0][0]
         y_cmd = - np.matmul(gains, y_pos)[0]
         z_cmd =   next_des[2]
-        yaw_cmd = -delta_th
+        yaw_cmd = delta_th
 	print(x_cmd, y_cmd, z_cmd, yaw_cmd)
         # clip the x, y and yaw commands
         if x_cmd > 0.3 :
@@ -87,10 +87,10 @@ class Controller:
         else :
             self.vel.linear.y = self.gain[1]*y_cmd
 
-        if yaw_cmd > 0.1 :
-            self.vel.angular.z = 0.1
-        elif yaw_cmd < -0.1:
-            self.vel.angular.z = -0.1
+        if yaw_cmd > 0.2 :
+            self.vel.angular.z = 0.15
+        elif x_cmd < -0.2:
+            self.vel.angular.z = -0.15
         else :
             self.vel.angular.z = self.gain[3]*yaw_cmd
 
