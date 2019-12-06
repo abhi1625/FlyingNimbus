@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import time
 import rospy
 import numpy as np 
@@ -37,7 +38,9 @@ def main():
         estimation.current_state.position.z = estimation.current_pos[2]
         
         # update current heading
-        estimateion.current_state.orientation.z = estimation.current_yaw
+        estimation.current_state.orientation.z = estimation.current_yaw
 
         rate.sleep()
-        
+
+if __name__=='__main__':
+    main()        
