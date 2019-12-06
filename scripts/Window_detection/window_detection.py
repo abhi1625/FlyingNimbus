@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import time
 import rospy
 import rospkg
 from std_msgs.msg import String
@@ -15,7 +16,7 @@ import cv2
 import numpy as np
 import math
 import copy
-# from GMM.test_data import *
+from GMM.test_data import *
 
 class video_stream:
 	def __init__(self):
@@ -26,10 +27,10 @@ class video_stream:
 		# pkg_path = rospack.get_path('noob_quaternions')
 
 		#print(pkg_path)
-		# weights_path = pkg_path+'/src/drone-course/Window_detection/GMM/training_params/window_weights_day_7.npy'
-		# params_path = pkg_path+'/src/drone-course/Window_detection/GMM/training_params/gaussian_params_day_7.npy'
+		# weights_path = pkg_path+'/src/drone-course/Window_detection/GMM/training_params/window_weights_4.npy'
+		# params_path = pkg_path+'/src/drone-course/Window_detection/GMM/training_params/gaussian_params_4.npy'
 		# self.n, self.K, self.weights, self.params = loadparamsGMM(weights_path, params_path)
-
+		self.image_cv = None
 
 	def img_callback(self, data):
 		try:
@@ -39,12 +40,14 @@ class video_stream:
 			print(e)
 		
 		if cv_image is not None:
-			processed_img = preprocess_img(cv_image)
+			# processed_img = preprocess_img(cv_image)
+			mask = self.window_detection.segment_window(cv_image)
+			self.window_detection.detection_hough_lines(cv_image,mask)
 
 		# run GMM inference to generate mask
 			# mask = test_combined(processed_img,self.K,self.n,self.weights, self.params,(0,255,0))
-			mask = self.window_detection.segment_window(processed_img)
-			self.window_detection.detection_hough_lines(processed_img,mask)
+	
+	# def processing(self):		 
 			#self.windo1w_detection.Detection_using_threshold(processed_img)
 	
 class Window_detection:
@@ -83,15 +86,19 @@ class Window_detection:
 		thresh_g_max=255
 		thresh_b_max=99
 
-		cv_image[cv_image[:,:,0] < thresh_b_min]=0
-		cv_image[cv_image[:,:,1] < thresh_g_min]=0
-		cv_image[cv_image[:,:,2] < thresh_r_min]=0
+		# cv_image[cv_image[:,:,0] < thresh_b_min]=0
+		# cv_image[cv_image[:,:,1] < thresh_g_min]=0
+		# cv_image[cv_image[:,:,2] < thresh_r_min]=0
 
-		cv_image[cv_image[:,:,0] > thresh_b_max]=0
-		cv_image[cv_image[:,:,1] > thresh_g_max]=0
-		cv_image[cv_image[:,:,2] > thresh_r_max]=0
-		# cv_image = np.meand
-		return cv_image
+		# cv_image[cv_image[:,:,0] > thresh_b_max]=0
+		# cv_image[cv_image[:,:,1] > thresh_g_max]=0
+		# cv_image[cv_image[:,:,2] > thresh_r_max]=0
+		mask = cv2.inRange(cv_image,np.array([thresh_b_min, thresh_g_min, thresh_r_min]),np.array([thresh_b_max, thresh_g_max, thresh_r_max]))
+		# mask = np.mean(mask,axis=2)
+		# print("########", mask.shape)
+		# cv2.imshow("test",mask)
+		# cv2.waitKey(1)
+		return mask
 
 	# def rotate_img_90_deg(self,img):
 	# 	h,w = img.shape[:2]
@@ -187,34 +194,6 @@ class Window_detection:
 		return rotVec,transVec
 
 
-	# def Detection_using_threshold(self,img):
-	# 	#vidcap = cv2.VideoCapture(self.data_path)
-	# 	#count = 0
-	# 	#while count <250:
-	# 	#	success,img = vidcap.read()
-	# 	# while count<1:
-	# 	# if((count<250) and(count%40 ==0)):
-	# 		# print("image dim = ",np.shape(img))
-	# 		# print('Read frame # ', count+1)
-		
-	# 	# img = self.rotate_img_90_deg(img)
-	# 	print("mean r = ", np.mean(np.mean(img[:,:,0])))
-	# 	print("mean g = ", np.mean(np.mean(img[:,:,1])))
-	# 	print("mean b = ", np.mean(np.mean(img[:,:,2])))
-
-	# 	img_pink = np.logical_and(np.logical_and(img[:,:,0]<10,img[:,:,0]>130,img[:,:,0]<200),img[:,:,1]<150)
-		
-	# 	img_pink = np.dstack((img_pink,img_pink,img_pink))
-	# 	img_pink = img_pink*img
-
-	# 	corner_pts = self.get_all_corners(img_pink,img)
-	# 	imgPoints = self.get_outer_window_corner_points(corner_pts, img)
-	# 	print ("imgPoints = ",imgPoints)
-	# 	rotVec,transVec = self.pnp(imgPoints,img)
-			
-	# 	# if cv2.waitKey(1)& 0xff==ord('q'):
-	# 	# 	cv2.destroyAllWindows()
-	# 		# count += 1
 
 	def detection_hough_lines(self,original_img, mask):
 		# img = cv2.imread(self.original_image)
@@ -222,12 +201,18 @@ class Window_detection:
 		n_rows = int(original_img.shape[0]/self.resize_factor)
 		n_cols = int(original_img.shape[1]/self.resize_factor)	
 		img = cv2.resize(original_img, (n_cols, n_rows))
-		
+		mask = cv2.resize(mask, (n_cols, n_rows))
+		# img = original_img
 		kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
 		# closing to fill unwanted small gaps
 		closing = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 		gray = cv2.medianBlur(closing,3)
-		mask = cv2.inRange(closing, 150, 255)
+		#print("mask size ", mask.shape)
+		#print("img shape", img.shape)
+		# mask = cv2.inRange(closing, 10, 255)
+
+		# cv_image = self.bridge.cv2_to_imgmsg(mask, "mono8")
+		# self.window_image_pub.publish(cv_image)
 		#cv2.imshow("abc",img)	
 		#if cv2.waitKey(1) & 0xFF == ord('q'):
 		#	cv2.destroyAllWindows()
@@ -245,6 +230,9 @@ class Window_detection:
 		new_y = int(original_img.shape[0])
 		new_x = int(original_img.shape[1])	
 		edges = cv2.resize(gray, (new_x, new_y))
+		start_time = time.time()
+		# cv2.imshow(";lol", edges)
+		# cv2.waitKey(1)
 		lines = cv2.HoughLinesP(edges,10, np.pi/180, 150, minLength, maxLineGap)
 		# lines = cv2.HoughLines(gray, 1, np.pi/180, 10, None, 0, 0 )
 		# print lines.shape
@@ -288,7 +276,7 @@ class Window_detection:
 					self.bottom_left_corner = np.delete(self.bottom_left_corner,0,0)
 					self.bottom_right_corner = np.delete(self.bottom_right_corner,0,0)
 					
-				if self.center.shape[0] > 10:
+				if self.center.shape[0] > 5:
 					self.center = np.delete(self.center,0,0)
 
 				# print(self.center.shape)
@@ -300,7 +288,8 @@ class Window_detection:
 
 				self.goodCorners = np.array([self.top_left, self.top_right, self.bottom_right, self.bottom_left])
 				rotVec,transVec = self.pnp(self.goodCorners,original_img)
-
+				end = time.time()
+				print("time for pnp ", end - start_time)
 				#publish quads pose relative to window
 				# quad_x = camera_frame z
 				# quad_y = camera_frame -x
@@ -311,7 +300,7 @@ class Window_detection:
 				# window center coordinates = [42,21.5,0]
 				self.window_pose.position.x = (transVec[2,0])/100 			#in m
 				self.window_pose.position.y = -(transVec[0,0] + 41.0)/100 	#in m
-				self.window_pose.position.z = (transVec[1,0] + 21.5)/100  	#in m
+				self.window_pose.position.z = -(transVec[1,0] + 21.5)/100  	#in m
 				self.window_pose.orientation.z = -rotVec[1]
 				# print("state x,y,z,yaw",self.twist_obj.linear.x,self.twist_obj.linear.y,self.twist_obj.linear.z,self.twist_obj.angular.z)
 				self.pose_pub.publish(self.window_pose)
@@ -348,18 +337,6 @@ class Window_detection:
 		cv_image = self.bridge.cv2_to_imgmsg(original_img, "bgr8")
 		self.window_image_pub.publish(cv_image)
 
-	# def Detection_using_threshold_image(self, mask):
-	# 	# img = cv2.imread(self.original_image)
-	# 	# mask = cv2.imread(self.image_path,0)
-	# 	mask = cv2.inRange(mask, 200, 255)
-	# 	masked_img = cv2.bitwise_and(img, img, mask = mask)
-	# 	print(masked_img.shape)
-	# 	corner_pts = self.get_all_corners(masked_img, img)
-	# 	imgPoints = self.get_outer_window_corner_points(corner_pts, img)
-	# 	print ("imgPoints = ",imgPoints)
-	# 	rotVec,transVec = self.pnp(imgPoints,img)
-				
-	# 	cv2.waitKey(0)
 
 
 
@@ -369,9 +346,12 @@ def main():
 	ob = video_stream()
 
 	rospy.init_node('image_reader', anonymous=True)
+	rate = rospy.Rate(30)
 	while(not rospy.is_shutdown()):
-		rospy.spin()
+		# rospy.spin()
+		# ob.processing()
 		count += 1;
+		rate.sleep()
 
 if __name__ == '__main__':
 	main()
