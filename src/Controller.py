@@ -24,7 +24,7 @@ class Controller:
         self.curr_vel_odom = np.zeros((2,))
 
         # controller gains
-        self.gain = np.array([1.0,0.8,0.5,0.5]) 
+        self.gain = np.array([0.10,0.5,0.3,0.05]) 
     
     def state_cb(self, data):
         self.state.position.x = data.position.x
@@ -45,25 +45,25 @@ class Controller:
     def gen_ctrl_inputs(self):
         # relative angle between current and target heading
         # target orientation is relative to body frame
-	self.target.position.x = self.state.position.x #math.sqrt(3.0)/2.0
+	#self.target.position.x = self.state.position.x #math.sqrt(3.0)/2.0
 	#self.target.position.y = 1.0 #self.state.position.y
 	#self.target.position.z = 0.0#2.0 - self.state.position.z
 	#self.target.orientation.z = self.state.orientation.z #math.pi/6
         delta_th = self.target.orientation.z 
-        rot_mat = np.array([[math.cos(-delta_th), -math.sin(-delta_th)],
-                            [math.sin(-delta_th),  math.cos(-delta_th)]])
-        trans_target = np.array([[self.target.position.x],
-                                 [self.target.position.y]])
+        #rot_mat = np.array([[math.cos(-delta_th), -math.sin(-delta_th)],
+        #                    [math.sin(-delta_th),  math.cos(-delta_th)]])
+        #trans_target = np.array([[self.target.position.x],
+        #                         [self.target.position.y]])
 	#print(self.target.orientation.z, delta_th)
-        rel_motion = np.matmul(rot_mat, trans_target)
-        next_des = np.array([rel_motion[0], rel_motion[1], self.target.position.z])
+        #rel_motion = np.matmul(rot_mat, trans_target)
+        next_des = np.array([self.target.position.x, self.target.position.y, self.target.position.z])
 
-        gains = np.array([[1.2*0.2236, 1.5*0.2657]])
+        gains = np.array([[0.2236, 0.2657]])
 
-        x_pos = np.array([[- next_des[0][0]],
+        x_pos = np.array([[- next_des[0]],
                         [5.0*(self.state.position.x - self.curr_vel_odom[0])]])
 	#print(next_des)
-        y_pos = np.array([- next_des[1][0],
+        y_pos = np.array([- next_des[1],
                         5.0*(self.state.position.y - self.curr_vel_odom[1])])
 
         # compute controller commands 
@@ -71,45 +71,55 @@ class Controller:
         y_cmd = - np.matmul(gains, y_pos)[0]
         z_cmd =   next_des[2]
         yaw_cmd = -delta_th
-	print(x_cmd, y_cmd, z_cmd, yaw_cmd)
+	print("xcmd = {}, ycmd = {}, zcmd = {}, yawcmd = {}".format(x_cmd, y_cmd, z_cmd, yaw_cmd))
         # clip the x, y and yaw commands
-        if x_cmd > 0.2 :
-            self.vel.linear.x = 0.2
-        elif x_cmd < -0.2:
-            self.vel.linear.x = -0.2
-        else :
-            self.vel.linear.x = self.gain[0]*x_cmd
-
+        #if x_cmd > 0.2 :
+        #    self.vel.linear.x = 0.2
+        #elif x_cmd < -0.2:
+        #    self.vel.linear.x = -0.2
+        #else :
+	if(self.target.position.x <=1.7):
+            self.vel.linear.x = 0.0 
+	else:
+	    self.vel.linear.x = self.gain[0]*x_cmd
         #if y_cmd > 0.15 :
         #    self.vel.linear.y = 0.15
         #elif y_cmd < -0.15:
         #    self.vel.linear.y = -0.15
         #else :
-	if (abs(self.target.position.y - self.state.position.y) < 0.1):
+	if (abs(self.target.position.y) < 0.1):
 	    self.vel.linear.y = 0
 	    print("###############")
 	else :
             self.vel.linear.y = self.gain[1]*y_cmd
 
-        if yaw_cmd > 0.1 :
-            self.vel.angular.z = 0.1
-        elif yaw_cmd < -0.1:
-            self.vel.angular.z = -0.1
-        else :
-            self.vel.angular.z = self.gain[3]*yaw_cmd
-
-        self.vel.linear.z = self.gain[2]*z_cmd
+        #if yaw_cmd > 0.1 :
+        #    self.vel.angular.z = 0.1
+        #elif yaw_cmd < -0.1:
+        #    self.vel.angular.z = -0.1
+        #else :
+        if abs(self.target.orientation.z) < 0.05:
+	    self.vel.angular.z = 0.0
+	else :
+	    self.vel.angular.z = -self.gain[3]*yaw_cmd
+	
+	if abs(self.target.position.z) < 0.05:
+	    self.vel.linear.z = 0.0
+	else:
+            self.vel.linear.z = self.gain[2]*z_cmd
 
 	#print(self.vel.linear.y)
-        self.cmd_pub.publish(self.vel)
+        
+	print("final x = {}, y = {}, z = {}, yaw = {}".format(self.vel.linear.x,self.vel.linear.y,self.vel.linear.z, self.vel.angular.z))
+	self.cmd_pub.publish(self.vel)
         self.curr_vel_odom[0] = self.state.position.x 
         self.curr_vel_odom[1] = self.state.position.y
-        return rel_motion
+        return x_cmd
 
 
 def main():
     rospy.init_node('Controller', anonymous=True)
-    rate = rospy.Rate(15)
+    rate = rospy.Rate(10)
     ob = Controller()
     while not rospy.is_shutdown():
         ob.gen_ctrl_inputs()
