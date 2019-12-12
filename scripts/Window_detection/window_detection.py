@@ -44,11 +44,7 @@ class video_stream:
 			mask = self.window_detection.segment_window(cv_image)
 			self.window_detection.detection_hough_lines(cv_image,mask)
 
-		# run GMM inference to generate mask
-			# mask = test_combined(processed_img,self.K,self.n,self.weights, self.params,(0,255,0))
-	
-	# def processing(self):		 
-			#self.windo1w_detection.Detection_using_threshold(processed_img)
+		
 	
 class Window_detection:
 	def __init__(self):
@@ -59,7 +55,7 @@ class Window_detection:
 		self.twist_obj = Twist()
 		self.window_pose = Pose()
 		self.bridge = CvBridge()
-		self.resize_factor = 4  
+		self.resize_factor = 2
 		################################################
 		#moving mean filter
 		self.center = np.array([0,0])
@@ -74,40 +70,29 @@ class Window_detection:
 		self.bottom_left = np.array([0,0])
 		self.bottom_right = np.array([0,0])
 		self.height_offset = 1.0
-
+		self.sliding_window_len = 3
 
 
 	def segment_window(self,cv_image):
 		# window param night light 100%
-		thresh_r_min=157
-		thresh_g_min=108
-		thresh_b_min=43
+		thresh_r_min=187
+		thresh_g_min=139
+		thresh_b_min=49
 		thresh_r_max=255
 		thresh_g_max=255
-		thresh_b_max=99
+		thresh_b_max=120
 
-		# cv_image[cv_image[:,:,0] < thresh_b_min]=0
-		# cv_image[cv_image[:,:,1] < thresh_g_min]=0
-		# cv_image[cv_image[:,:,2] < thresh_r_min]=0
+		# window param day light 50%
+		# thresh_r_min=213
+		# thresh_g_min=158
+		# thresh_b_min=94
+		# thresh_r_max=255
+		# thresh_g_max=255
+		# thresh_b_max=164
 
-		# cv_image[cv_image[:,:,0] > thresh_b_max]=0
-		# cv_image[cv_image[:,:,1] > thresh_g_max]=0
-		# cv_image[cv_image[:,:,2] > thresh_r_max]=0
 		mask = cv2.inRange(cv_image,np.array([thresh_b_min, thresh_g_min, thresh_r_min]),np.array([thresh_b_max, thresh_g_max, thresh_r_max]))
-		# mask = np.mean(mask,axis=2)
-		# print("########", mask.shape)
-		# cv2.imshow("test",mask)
-		# cv2.waitKey(1)
-		return mask
 
-	# def rotate_img_90_deg(self,img):
-	# 	h,w = img.shape[:2]
-	# 	center = (w/2,h/2)
-	# 	M = cv2.getRotationMatrix2D(center, -90, 0.5)
-	# 	M[0,-1] = M[0,-1] - ((w-h/2)/2)
-	# 	M[-1,-1] = M[-1,-1] - ((h-w/2)/2)
-	# 	warped_img = cv2.warpAffine(copy.deepcopy(img), M, (h/2,w/2))
-	# 	return warped_img
+		return mask
 
 	def get_all_corners(self,img,img_orig,thresh = 1):
 		gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -130,7 +115,7 @@ class Window_detection:
 	def get_outer_window_corner_points(self, corner_pts, img):
 		distances = corner_pts[:,0]**2 + corner_pts[:,1]**2
 		h,w = img.shape[:2]
-		print("corner_pts = ",corner_pts)
+		# print("corner_pts = ",corner_pts)
 		left_pt = np.argmin(distances)
 		left_top_corner = corner_pts[left_pt,:]
 		# print("")
@@ -166,7 +151,7 @@ class Window_detection:
 							 [3,43,0]], dtype=np.float64)
 
 		# Camera K matrix(intrinsic params)
-		camMatrix = np.array([[685.6401304538527, 0 , 428.4278693789007],[0, 683.912176820224, 238.21676543821124],[0,0,1]],dtype=np.float32)
+		camMatrix = np.array([[689.632, 0 , 664.887],[0, 687.574, 376.0835],[0,0,1]],dtype=np.float32)
 
 		#distortion coefficients 
 		distCoeffs = np.array([0,0,0,0,0],dtype=np.float64)
@@ -198,10 +183,14 @@ class Window_detection:
 	def detection_hough_lines(self,original_img, mask):
 		# img = cv2.imread(self.original_image)
 		# mask = cv2.imread(self.image_path,0)
+		# cv2.imshow("mask",mask)
+		# cv2.waitKey(70)
+		# print("orig size",original_img.shape)
 		n_rows = int(original_img.shape[0]/self.resize_factor)
 		n_cols = int(original_img.shape[1]/self.resize_factor)	
 		img = cv2.resize(original_img, (n_cols, n_rows))
 		mask = cv2.resize(mask, (n_cols, n_rows))
+
 		# img = original_img
 		kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
 		# closing to fill unwanted small gaps
@@ -226,19 +215,23 @@ class Window_detection:
 		gray = cv2.GaussianBlur(gray, (3,3), cv2.BORDER_DEFAULT)
 		# edges = cv2.Canny(gray, 50, 150, apertureSize = 3)
 		minLength = 200
-		maxLineGap = 100
-		new_y = int(original_img.shape[0])
-		new_x = int(original_img.shape[1])	
-		edges = cv2.resize(gray, (new_x, new_y))
-		start_time = time.time()
+		maxLineGap = 80
+		# new_y = int(original_img.shape[0])
+		# new_x = int(original_img.shape[1])	
+		# edges = cv2.resize(gray, (new_x, new_y))
+		edges = gray
+		# print("mask size",gray.shape)
+		# start_time = time.time()
 		# cv2.imshow(";lol", edges)
 		# cv2.waitKey(1)
-		lines = cv2.HoughLinesP(edges,10, np.pi/180, 150, minLength, maxLineGap)
+		lines = cv2.HoughLinesP(edges,10, np.pi/180, 80, minLength, maxLineGap)
 		# lines = cv2.HoughLines(gray, 1, np.pi/180, 10, None, 0, 0 )
 		# print lines.shape
 
 		# input('as')
-		houghlines = np.zeros_like(original_img)
+		houghlines = np.zeros_like(edges)
+		houghlines = np.dstack((houghlines,houghlines,houghlines))
+		# print("houghlines shape",houghlines.shape)
 		try:
 			for x1, y1, x2, y2 in lines[:,0,:]:
 				cv2.line(houghlines, (x1, y1),(x2,y2), (0,255,0), 2)
@@ -251,8 +244,19 @@ class Window_detection:
 		kernel_lines = cv2.getStructuringElement(cv2.MORPH_RECT,(31,31))
 		# closing to fill unwanted small gaps
 		houghlines = cv2.morphologyEx(houghlines, cv2.MORPH_CLOSE, kernel_lines)
-		houghlines = cv2.medianBlur(houghlines,3)
+		kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(9,9))
+		houghlines  = cv2.dilate(houghlines,kernel,iterations = 1)
+		houghlines = cv2.morphologyEx(houghlines, cv2.MORPH_CLOSE, kernel)
+		houghlines = cv2.medianBlur(houghlines,5)
+		# print("HoughLines shape = ", (houghlines.dtype))
 		houghlines_gray = cv2.cvtColor(houghlines, cv2.COLOR_RGB2GRAY)
+		# cv2.imshow("hough lines",houghlines_gray)
+		# cv2.waitKey(70)
+		# print("original image shape = ", original_img.shape)
+		n_rows,n_cols,_ = original_img.shape
+		houghlines_gray = cv2.resize(houghlines_gray, (n_cols, n_rows))
+		# cv2.imshow("resized hough gray",houghlines_gray)
+		# cv2.waitKey(70)
 
 		##############################################################
 		#find contours
@@ -270,13 +274,13 @@ class Window_detection:
 				self.bottom_left_corner = np.vstack([self.bottom_left_corner, corners[3]])
 				self.bottom_right_corner = np.vstack([self.bottom_right_corner, corners[2]])
 
-				if self.top_left_corner.shape[0] > 5:
+				if self.top_left_corner.shape[0] > self.sliding_window_len:
 					self.top_left_corner = np.delete(self.top_left_corner,0,0)
 					self.top_right_corner = np.delete(self.top_right_corner,0,0)
 					self.bottom_left_corner = np.delete(self.bottom_left_corner,0,0)
 					self.bottom_right_corner = np.delete(self.bottom_right_corner,0,0)
 					
-				if self.center.shape[0] > 5:
+				if self.center.shape[0] > self.sliding_window_len:
 					self.center = np.delete(self.center,0,0)
 
 				# print(self.center.shape)
@@ -288,8 +292,8 @@ class Window_detection:
 
 				self.goodCorners = np.array([self.top_left, self.top_right, self.bottom_right, self.bottom_left])
 				rotVec,transVec = self.pnp(self.goodCorners,original_img)
-				end = time.time()
-				print("time for pnp ", end - start_time)
+				# end = time.time()
+				# print("time for pnp ", end - start_time)
 				#publish quads pose relative to window
 				# quad_x = camera_frame z
 				# quad_y = camera_frame -x
@@ -301,8 +305,9 @@ class Window_detection:
 				self.window_pose.position.x = (transVec[2,0])/100 			#in m
 				self.window_pose.position.y = -(transVec[0,0] + 41.0)/100 	#in m
 				self.window_pose.position.z = -(transVec[1,0] + 21.5)/100  	#in m
-				self.window_pose.orientation.z = -rotVec[1]
+				self.window_pose.orientation.z = float(-rotVec[1])
 				# print("state x,y,z,yaw",self.twist_obj.linear.x,self.twist_obj.linear.y,self.twist_obj.linear.z,self.twist_obj.angular.z)
+				print("x {}, y{}, z{}, yaw {}".format(self.window_pose.position.x,self.window_pose.position.y,self.window_pose.position.z,self.window_pose.orientation.z))
 				self.pose_pub.publish(self.window_pose)
 				self.state_pub.publish("active")
 		else:
@@ -328,7 +333,8 @@ class Window_detection:
 		# except:
 		# 	pass
 
-		# cv2.imshow('corner',original_img)
+		cv2.imshow('corner',original_img)
+		cv2.waitKey(50)
 		#cv2.imshow('frame',houghlines)
 		# cv2.imshow('frame1',masked_img)
 		#if cv2.waitKey(1) & 0xFF == ord('q'):
