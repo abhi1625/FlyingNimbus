@@ -338,8 +338,8 @@ class Window_detection:
 		# except:
 		# 	pass
 
-		cv2.imshow('corner',original_img)
-		cv2.waitKey(1)
+		#cv2.imshow('corner',original_img)
+		#cv2.waitKey(1)
 		#cv2.imshow('frame',houghlines)
 		# cv2.imshow('frame1',masked_img)
 		#if cv2.waitKey(1) & 0xFF == ord('q'):

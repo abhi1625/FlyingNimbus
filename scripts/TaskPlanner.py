@@ -3,7 +3,7 @@ import rospy
 import smach
 from std_msgs.msg import Empty
 from Window_detection.window_detection import video_stream
-
+from geometry_msgs.msg import Twist
 # define state takeoff
 
 class TakeOff(smach.State):
@@ -11,11 +11,18 @@ class TakeOff(smach.State):
 	def __init__(self):
 		smach.State.__init__(self,outcomes=['outcome2'])
 		self.takeoff_pub = rospy.Publisher('/bebop/takeoff', Empty, queue_size=1 , latch=True)
-		
+		self.move_up = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size=1)
 	def execute(self,userdata):
 		rospy.loginfo('Executing take off')
 		self.takeoff_pub.publish()
+		vel = Twist()
+		vel.linear.z = 0.5
 		rospy.sleep(3)
+		self.move_up.publish(vel)
+		rospy.sleep(2)
+		self.move_up.publish(vel)
+		rospy.sleep(2)
+		self.move_up.publish(vel)
 		return 'outcome2'
 
 # define state First wall detection
