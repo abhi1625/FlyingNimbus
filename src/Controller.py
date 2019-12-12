@@ -89,10 +89,10 @@ class Controller:
         #    self.vel.linear.x = -0.2
         #else :
 	print("curr x pos perceived", self.target.position.x)
-	if(self.target.position.x >=1.2):
+	if(self.target.position.x >=1.5):
             self.vel.linear.x = 0.01 
 	elif (self.target.position.x> 0.0 and self.target.position.x<1.2):
-	    if (abs(self.target.position.y)<0.1 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.1):
+	    if (abs(self.target.position.y)<0.05 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.1):
 	    	self.vel.linear.x = 0.3
 	    else:
 		self.vel.linear.x = 0.0
@@ -112,7 +112,7 @@ class Controller:
         #elif yaw_cmd < -0.1:
         #    self.vel.angular.z = -0.1
         #else :
-    if abs(self.target.orientation.z) < 0.05:
+    	if abs(self.target.orientation.z) < 0.05:
 	    self.vel.angular.z = 0.0
 	else :
 	    self.vel.angular.z = -self.gain[3]*yaw_cmd
