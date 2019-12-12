@@ -189,8 +189,8 @@ class Window_detection:
 		img = cv2.resize(original_img, (n_cols, n_rows))
 		mask = cv2.resize(mask, (n_cols, n_rows))
 
-		cv2.imshow("mask",mask)
-		cv2.waitKey(70)
+		# cv2.imshow("mask",mask)
+		# cv2.waitKey(70)
 		# img = original_img
 		# kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
 		# # closing to fill unwanted small gaps
