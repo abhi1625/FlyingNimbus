@@ -28,12 +28,15 @@ class Controller:
 
         # controller gains
         self.gain = np.array([0.10,0.5,0.3,0.05]) 
+
+        # yaw bias
+        self.yaw_bias = 0.0
     
     def state_cb(self, data):
         self.state.position.x = data.position.x
         self.state.position.y = data.position.y
         self.state.position.z = data.position.z
-        self.state.orientation.z = data.orientation.z
+        self.state.orientation.z = data.orientation.z - self.yaw_bias
 
     def vel_cb(self, data):
 	self.curr_vel_odom[0] = data.twist.twist.linear.x
@@ -89,7 +92,7 @@ class Controller:
 	if(self.target.position.x >=1.2):
             self.vel.linear.x = 0.01 
 	elif (self.target.position.x> 0.0 and self.target.position.x<1.2):
-	    if (abs(self.target.position.y)<0.1 and abs(self.target.position.z)<0.1):
+	    if (abs(self.target.position.y)<0.1 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.1):
 	    	self.vel.linear.x = 0.3
 	    else:
 		self.vel.linear.x = 0.0
@@ -109,7 +112,7 @@ class Controller:
         #elif yaw_cmd < -0.1:
         #    self.vel.angular.z = -0.1
         #else :
-        if abs(self.target.orientation.z) < 0.05:
+    if abs(self.target.orientation.z) < 0.05:
 	    self.vel.angular.z = 0.0
 	else :
 	    self.vel.angular.z = -self.gain[3]*yaw_cmd
