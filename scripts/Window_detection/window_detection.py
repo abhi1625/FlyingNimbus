@@ -189,47 +189,17 @@ class Window_detection:
 		img = cv2.resize(original_img, (n_cols, n_rows))
 		mask = cv2.resize(mask, (n_cols, n_rows))
 
-		# cv2.imshow("mask",mask)
-		# cv2.waitKey(70)
-		# img = original_img
-		# kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(7,7))
-		# # closing to fill unwanted small gaps
-		# closing = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-		# gray = cv2.medianBlur(closing,3)
-		#print("mask size ", mask.shape)
-		#print("img shape", img.shape)
-		# mask = cv2.inRange(closing, 10, 255)
-		# cv2.imshow("gray",gray)
-		# cv2.waitKey(70)
-		# cv_image = self.bridge.cv2_to_imgmsg(mask, "mono8")
-		# self.window_image_pub.publish(cv_image)
-		#cv2.imshow("abc",img)	
-		#if cv2.waitKey(1) & 0xFF == ord('q'):
-		#	cv2.destroyAllWindows()
-
-		# masked_img = cv2.bitwise_and(img, img, mask = mask)
-		# cv2.imshow("mask",masked_img)
-		# cv2.waitKey(70)
-		# gray = cv2.cvtColor(masked_img,cv2.COLOR_BGR2GRAY)
-		
 		gray = cv2.GaussianBlur(mask, (3,3), cv2.BORDER_DEFAULT)
 		# edges = cv2.Canny(gray, 50, 150, apertureSize = 3)
 		minLength = 200
 		maxLineGap = 80
-		# new_y = int(original_img.shape[0])
-		# new_x = int(original_img.shape[1])	
-		# edges = cv2.resize(gray, (new_x, new_y))
-		edges = gray
-		# print("mask size",gray.shape)
-		# start_time = time.time()
-		# cv2.imshow(";lol", edges)
-		# cv2.waitKey(1)
-		lines = cv2.HoughLinesP(edges,10, np.pi/180, 80, minLength, maxLineGap)
+
+		lines = cv2.HoughLinesP(gray,10, np.pi/180, 80, minLength, maxLineGap)
 		# lines = cv2.HoughLines(gray, 1, np.pi/180, 10, None, 0, 0 )
 		# print lines.shape
 
 		# input('as')
-		houghlines = np.zeros_like(edges)
+		houghlines = np.zeros_like(gray)
 		houghlines = np.dstack((houghlines,houghlines,houghlines))
 		# print("houghlines shape",houghlines.shape)
 		try:
@@ -246,18 +216,10 @@ class Window_detection:
 		kernel_lines = cv2.getStructuringElement(cv2.MORPH_RECT,(31,31))
 		# closing to fill unwanted small gaps
 		houghlines = cv2.morphologyEx(houghlines, cv2.MORPH_CLOSE, kernel_lines)
-		# cv2.imshow("houghlines close",houghlines)
-		# cv2.waitKey(50)
 		kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(9,9))
 		houghlines  = cv2.dilate(houghlines,kernel,iterations = 1)
 		houghlines = cv2.morphologyEx(houghlines, cv2.MORPH_CLOSE, kernel)
 		houghlines_gray = cv2.medianBlur(houghlines,5)
-		# print("HoughLines shape = ", (houghlines.dtype))
-		# houghlines_gray = cv2.cvtColor(houghlines, cv2.COLOR_RGB2GRAY)
-		# cv2.imshow("hough lines",houghlines_gray)
-		# cv2.waitKey(70)
-		# print("original image shape = ", original_img.shape)
-		# houghlines_gray =  houghlines
 		n_rows,n_cols,_ = original_img.shape
 		houghlines_gray = cv2.resize(houghlines_gray, (n_cols, n_rows))
 		# cv2.imshow("resized hough gray",houghlines_gray)
