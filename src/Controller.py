@@ -3,12 +3,15 @@ import time
 import rospy
 import numpy as np 
 from geometry_msgs.msg import Twist, Pose
+from nav_msgs.msg import Odometry
 import math
 
 class Controller:
     def __init__(self):
         # subscriber for current state
         self.state_sub = rospy.Subscriber('/current_state', Pose, self.state_cb)
+	# subscriber forcurrent velocity
+	self.vel_sub = rospy.Subscriber('/bebop/odom',Odometry, self.vel_cb)
         # subscriber for target pose
         self.target_sub = rospy.Subscriber('/relative_pose', Pose, self.target_cb)
         # publisher for control inputs
@@ -31,6 +34,10 @@ class Controller:
         self.state.position.y = data.position.y
         self.state.position.z = data.position.z
         self.state.orientation.z = data.orientation.z
+
+    def vel_cb(self, data):
+	self.curr_vel_odom[0] = data.twist.twist.linear.x
+	self.curr_vel_odom[1] = data.twist.twist.linear.y
 
     def target_cb(self, data):
         """
@@ -60,28 +67,32 @@ class Controller:
 
         gains = np.array([[0.2236, 0.2657]])
 
-        x_pos = np.array([[- next_des[0]],
-                        [5.0*(self.state.position.x - self.curr_vel_odom[0])]])
+        x_pos = np.array([- next_des[0],
+                        self.curr_vel_odom[0]])
 	#print(next_des)
         y_pos = np.array([- next_des[1],
-                        5.0*(self.state.position.y - self.curr_vel_odom[1])])
+                        self.curr_vel_odom[1]])
 
         # compute controller commands 
-        x_cmd = - np.matmul(gains, x_pos)[0][0]
+        x_cmd = - np.matmul(gains, x_pos)[0]
         y_cmd = - np.matmul(gains, y_pos)[0]
         z_cmd =   next_des[2]
         yaw_cmd = -delta_th
-	print("xcmd = {}, ycmd = {}, zcmd = {}, yawcmd = {}".format(x_cmd, y_cmd, z_cmd, yaw_cmd))
+	#print("xcmd = {}, ycmd = {}, zcmd = {}, yawcmd = {}".format(x_cmd, y_cmd, z_cmd, yaw_cmd))
         # clip the x, y and yaw commands
         #if x_cmd > 0.2 :
         #    self.vel.linear.x = 0.2
         #elif x_cmd < -0.2:
         #    self.vel.linear.x = -0.2
         #else :
-	if(self.target.position.x <=1.7):
-            self.vel.linear.x = 0.0 
-	else:
-	    self.vel.linear.x = self.gain[0]*x_cmd
+	print("curr x pos perceived", self.target.position.x)
+	if(self.target.position.x >=1.2):
+            self.vel.linear.x = 0.01 
+	elif (self.target.position.x> 0.0 and self.target.position.x<1.2):
+	    if (abs(self.target.position.y)<0.1 and abs(self.target.position.z)<0.1):
+	    	self.vel.linear.x = 0.3
+	    else:
+		self.vel.linear.x = 0.0
         #if y_cmd > 0.15 :
         #    self.vel.linear.y = 0.15
         #elif y_cmd < -0.15:
@@ -110,7 +121,7 @@ class Controller:
 
 	#print(self.vel.linear.y)
         
-	print("final x = {}, y = {}, z = {}, yaw = {}".format(self.vel.linear.x,self.vel.linear.y,self.vel.linear.z, self.vel.angular.z))
+	#print("final x = {}, y = {}, z = {}, yaw = {}".format(self.vel.linear.x,self.vel.linear.y,self.vel.linear.z, self.vel.angular.z))
 	self.cmd_pub.publish(self.vel)
         self.curr_vel_odom[0] = self.state.position.x 
         self.curr_vel_odom[1] = self.state.position.y
