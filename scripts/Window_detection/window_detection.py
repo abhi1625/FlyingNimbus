@@ -241,13 +241,13 @@ class Window_detection:
 
 		# print ("imgPoints = ",imgPoints)
 		houghlines = cv2.cvtColor(houghlines, cv2.COLOR_RGB2GRAY)
-		cv2.imshow("houghlines init",houghlines)
-		cv2.waitKey(50)
+		# cv2.imshow("houghlines init",houghlines)
+		# cv2.waitKey(50)
 		kernel_lines = cv2.getStructuringElement(cv2.MORPH_RECT,(31,31))
 		# closing to fill unwanted small gaps
 		houghlines = cv2.morphologyEx(houghlines, cv2.MORPH_CLOSE, kernel_lines)
-		cv2.imshow("houghlines close",houghlines)
-		cv2.waitKey(50)
+		# cv2.imshow("houghlines close",houghlines)
+		# cv2.waitKey(50)
 		kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(9,9))
 		houghlines  = cv2.dilate(houghlines,kernel,iterations = 1)
 		houghlines = cv2.morphologyEx(houghlines, cv2.MORPH_CLOSE, kernel)
@@ -339,7 +339,7 @@ class Window_detection:
 		# 	pass
 
 		cv2.imshow('corner',original_img)
-		cv2.waitKey(50)
+		cv2.waitKey(1)
 		#cv2.imshow('frame',houghlines)
 		# cv2.imshow('frame1',masked_img)
 		#if cv2.waitKey(1) & 0xFF == ord('q'):
