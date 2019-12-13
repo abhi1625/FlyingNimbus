@@ -12,10 +12,6 @@ from cv_bridge import CvBridge, CvBridgeError
 #import matplotlib.pyplot as plt
 #from mpl_toolkits.mplot3d import Axes3D
 from nav_msgs.msg import Odometry
-# from ../trajectory.mission_script import trajectory_track
-sys.path.insert(1, '../trajectory')
-from mission_script import trajectory_track
-from run import compute_flow
 
 
 class StereoVO:

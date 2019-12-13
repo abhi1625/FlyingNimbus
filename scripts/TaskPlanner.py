@@ -3,6 +3,7 @@ import rospy
 import smach
 from std_msgs.msg import Empty
 from Window_detection.window_detection import video_stream
+from Wall_detection.video_stream import video_stream
 from geometry_msgs.msg import Twist
 # define state takeoff
 
@@ -34,6 +35,13 @@ class FirstWall(smach.State):
 	def execute(self, userdata):
 		rospy.loginfo("Executing first wall detection")
 		# call wall detection script
+		ob = video_stream()
+		count = 0
+		rate = rospy.Rate(10)
+		while(not rospy.is_shutdown()):
+			rate.sleep()
+			print count
+			count +=1	
 		return 'outcome2'
 
 
@@ -131,13 +139,13 @@ def main():
     with sm:
         # Add states to the container
         smach.StateMachine.add('TAKEOFF', TakeOff(), 
-                               transitions={'outcome2':'WINDOW'})
+                               transitions={'outcome2':'FIRSTWALL'})
         
         smach.StateMachine.add('FIRSTWALL', FirstWall(), 
-                               transitions={'outcome2':'WINDOW'})
-
-        smach.StateMachine.add('WINDOW', WindowDetection(), 
                                transitions={'outcome2':'LANDF'})
+
+        #smach.StateMachine.add('WINDOW', WindowDetection(), 
+        #                       transitions={'outcome2':'LANDF'})
 
         # smach.StateMachine.add('BRIDGE', BridgeDetection(), 
         #                        transitions={'outcome2':'CCTAG'})
