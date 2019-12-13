@@ -133,8 +133,8 @@ def main():
         smach.StateMachine.add('TAKEOFF', TakeOff(), 
                                transitions={'outcome2':'WINDOW'})
         
-        # smach.StateMachine.add('FIRSTWALL', FirstWall(), 
-                               # transitions={'outcome2':'WINDOW'})
+        smach.StateMachine.add('FIRSTWALL', FirstWall(), 
+                               transitions={'outcome2':'WINDOW'})
 
         smach.StateMachine.add('WINDOW', WindowDetection(), 
                                transitions={'outcome2':'LANDF'})
