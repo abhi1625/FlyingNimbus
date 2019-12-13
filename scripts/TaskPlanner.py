@@ -94,6 +94,8 @@ class Punch_forward(smach.State):
 		self.pose_pub = rospy.Publisher('/relative_pose', Pose, queue_size = 1)
 	
 	def execute(self, userdata):
+		print("sleeping for 2 secs")
+		rospy.sleep(2)
 		vel = Pose()
 		vel.position.x = 0.0
 		vel.position.y = 0.0
