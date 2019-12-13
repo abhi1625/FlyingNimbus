@@ -94,7 +94,7 @@ class Controller:
 	if(self.target.position.x >=1.5):
             self.vel.linear.x = 0.01 
 	elif (self.target.position.x> 0.0 and self.target.position.x<1.2):
-	    if (abs(self.target.position.y)<0.05 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.1 ):
+	    if (abs(self.target.position.y)<0.05 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.1 and self.target.position.y != 0.0 and self.target.position.z != 0.0 ):
 	    	self.vel.linear.x = 0.0
             	flag = Bool()
             	flag.data = True

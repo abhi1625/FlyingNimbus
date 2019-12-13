@@ -112,7 +112,7 @@ class Punch_forward(smach.State):
 			print("this is a test")
 			vel.position.x = self.rel_err
 			self.pose_pub.publish(vel)
-			self.rel_err -= 0.2
+			self.rel_err -= 0.05
 			rate.sleep()			
 		return 'outcome2'
 
