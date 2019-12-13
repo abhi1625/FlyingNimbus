@@ -82,13 +82,13 @@ class Window_detection:
 		thresh_g_max=255
 		thresh_b_max=120
 
-		# window param day light 50%
-		# thresh_r_min=213
-		# thresh_g_min=158
-		# thresh_b_min=94
-		# thresh_r_max=255
-		# thresh_g_max=255
-		# thresh_b_max=164
+		# window param day 8:30 a.m. light 100%
+		#thresh_r_min=250
+		#thresh_g_min=163
+		#thresh_b_min=90
+		#thresh_r_max=255
+		#thresh_g_max=255
+		#thresh_b_max=167
 
 		mask = cv2.inRange(cv_image,np.array([thresh_b_min, thresh_g_min, thresh_r_min]),np.array([thresh_b_max, thresh_g_max, thresh_r_max]))
 
@@ -184,6 +184,8 @@ class Window_detection:
 		# img = cv2.imread(self.original_image)
 		# mask = cv2.imread(self.image_path,0)
 		# print("orig size",original_img.shape)
+		# cv2.imshow("mask", mask)
+		# cv2.waitKey(1)
 		n_rows = int(original_img.shape[0]/self.resize_factor)
 		n_cols = int(original_img.shape[1]/self.resize_factor)	
 		img = cv2.resize(original_img, (n_cols, n_rows))
@@ -212,7 +214,7 @@ class Window_detection:
 		# print ("imgPoints = ",imgPoints)
 		houghlines = cv2.cvtColor(houghlines, cv2.COLOR_RGB2GRAY)
 		# cv2.imshow("houghlines init",houghlines)
-		# cv2.waitKey(50)
+		# cv2.waitKey(1)
 		kernel_lines = cv2.getStructuringElement(cv2.MORPH_RECT,(31,31))
 		# closing to fill unwanted small gaps
 		houghlines = cv2.morphologyEx(houghlines, cv2.MORPH_CLOSE, kernel_lines)
@@ -223,7 +225,7 @@ class Window_detection:
 		n_rows,n_cols,_ = original_img.shape
 		houghlines_gray = cv2.resize(houghlines_gray, (n_cols, n_rows))
 		# cv2.imshow("resized hough gray",houghlines_gray)
-		# cv2.waitKey(70)
+		# cv2.waitKey(1)
 
 		##############################################################
 		#find contours
