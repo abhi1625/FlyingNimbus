@@ -3,14 +3,15 @@ import rospy
 import smach
 from std_msgs.msg import Empty, Bool
 from Window_detection.window_detection import video_stream
-from Wall_detection.video_stream import video_stream
-from geometry_msgs.msg import Twist
+from Wall_detection.video_stream import video_stream as vid_stream
+from geometry_msgs.msg import Twist, Pose
 # define state takeoff
-class Flag_sub():
+class Flag_sub:
 	def __init__(self):
 		self.flag_sb = rospy.Subscriber('/exit_flag', Bool, self.flag_cb)
-		self.flag_pub = rospy.Publisher('/exit_flag', Bool, queue_size = 1)
+		self.flag_pub = rospy.Publisher('/exit_flag', Bool, queue_size = 10)
 		self.flag = Bool()
+		#rospy.spin()
 	def flag_cb(self, data):
 		print("cb success")
 		self.flag = data 
@@ -50,6 +51,7 @@ class FirstWall(smach.State):
 		rate = rospy.Rate(10)
 		flag = Bool()
 		flag.data = False
+		
 		self.flag_ob.flag_pub(flag)
 		while(not rospy.is_shutdown()):
 			rate.sleep()
@@ -65,9 +67,9 @@ class FirstWall(smach.State):
 class WindowDetection(smach.State):
 	def __init__(self):
 		smach.State.__init__(self,outcomes=['outcome2'])
-		self.flag_ob = Flag_sub()
 
 	def execute(self, userdata):
+		flag_ob = Flag_sub()
 		rospy.loginfo("Executing Window detection")
 		# call Window detection script
 		ob = video_stream()
@@ -75,16 +77,44 @@ class WindowDetection(smach.State):
 		rate = rospy.Rate(10)
 		flag = Bool()
 		flag.data = False
-		self.flag_ob.flag_pub.publish(flag)
+		print("success")
+		flag_ob.flag_pub.publish(flag)
 		while(not rospy.is_shutdown()):
 			rate.sleep()
-			print count
+			#print count
 			count+=1
-			if(self.flag_ob.flag.data):
+			if(flag_ob.flag.data):
 				break
 		return 'outcome2'
 
-
+class Punch_forward(smach.State):
+	def __init__(self,err):
+		smach.State.__init__(self,outcomes=['outcome2'])
+		self.rel_err = err
+		self.pose_pub = rospy.Publisher('/relative_pose', Pose, queue_size = 1)
+	
+	def execute(self, userdata):
+		vel = Pose()
+		vel.position.x = 0.0
+		vel.position.y = 0.0
+		vel.position.z = 0.0
+		vel.orientation.x = 0.0
+		vel.orientation.y = 0.0
+		vel.orientation.z = 0.0
+		
+		flag_ob = Flag_sub()
+		rospy.loginfo("Executing Punch forward")
+		rate = rospy.Rate(10)
+		flag = Bool()
+		flag.data = False
+		flag_ob.flag_pub.publish(flag)
+		while(self.rel_err>=0.0 and not rospy.is_shutdown()):
+			print("this is a test")
+			vel.position.x = self.rel_err
+			self.pose_pub.publish(vel)
+			self.rel_err -= 0.2
+			rate.sleep()			
+		return 'outcome2'
 
 # define state Bridge detection
 
@@ -165,9 +195,13 @@ def main():
         #                        transitions={'outcome2':'LANDF'})
 
         smach.StateMachine.add('WINDOW', WindowDetection(), 
-                              transitions={'outcome2':'LANDF'})
-		print("This was a success")
+                              transitions={'outcome2':'PUNCH'})
+        
+	print("This was a success")
+	smach.StateMachine.add('PUNCH',Punch_forward(1.0), 
+                              transitions={'outcome2':'SMend'})
         # smach.StateMachine.add('BRIDGE', BridgeDetection(), 
+	print("This was a success 2")
         #                        transitions={'outcome2':'CCTAG'})
 
         # smach.StateMachine.add('CCTAG', CCTagDetection(), 

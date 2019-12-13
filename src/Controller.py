@@ -94,11 +94,14 @@ class Controller:
 	if(self.target.position.x >=1.5):
             self.vel.linear.x = 0.01 
 	elif (self.target.position.x> 0.0 and self.target.position.x<1.2):
-	    if (abs(self.target.position.y)<0.05 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.1):
+	    if (abs(self.target.position.y)<0.05 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.1 ):
 	    	self.vel.linear.x = 0.0
-            flag = Bool()
-            flag.data = True
-            self.flag_pub.publish(flag)
+            	flag = Bool()
+            	flag.data = True
+            	self.flag_pub.publish(flag)
+	    elif(self.target.position.y == 0.0 and self.target.position.z == 0.0):
+		    
+		self.vel.linear.x = 0.2
 	    else:
 		self.vel.linear.x = 0.0
         #if y_cmd > 0.15 :

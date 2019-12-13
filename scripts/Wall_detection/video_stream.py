@@ -29,7 +29,7 @@ class video_stream:
         	self.ind = 0
 		self.pose_pub = rospy.Publisher("/relative_pose", Pose, queue_size=100)
 		self.rel_pose = Pose()
-        self.mean_pose = Pose()
+        	self.mean_pose = Pose()
 	def img_callback(self, data):
 		try:
 			cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
