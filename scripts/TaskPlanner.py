@@ -3,6 +3,7 @@ import rospy
 import smach
 from std_msgs.msg import Empty
 from Window_detection.window_detection import video_stream
+from Bridge_detection.river import StereoVO
 from geometry_msgs.msg import Twist
 # define state takeoff
 
