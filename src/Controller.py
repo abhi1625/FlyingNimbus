@@ -3,6 +3,7 @@ import time
 import rospy
 import numpy as np 
 from geometry_msgs.msg import Twist, Pose
+from std_msgs.msg import Bool
 from nav_msgs.msg import Odometry
 import math
 
@@ -16,6 +17,7 @@ class Controller:
         self.target_sub = rospy.Subscriber('/relative_pose', Pose, self.target_cb)
         # publisher for control inputs
         self.cmd_pub = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size=10)
+        self.flag_pub = rospy.Publisher('/exit_flag', Bool, queue_size = 1)
 
         # twist object for cmd_vel 
         self.vel = Twist()
@@ -93,7 +95,10 @@ class Controller:
             self.vel.linear.x = 0.01 
 	elif (self.target.position.x> 0.0 and self.target.position.x<1.2):
 	    if (abs(self.target.position.y)<0.05 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.1):
-	    	self.vel.linear.x = 0.3
+	    	self.vel.linear.x = 0.0
+            flag = Bool()
+            flag.data = True
+            self.flag_pub.publish(flag)
 	    else:
 		self.vel.linear.x = 0.0
         #if y_cmd > 0.15 :
