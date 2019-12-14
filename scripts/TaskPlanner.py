@@ -58,6 +58,42 @@ class WindowDetection(smach.State):
 		return 'outcome2'
 
 
+class PrepareForBridge(smach.State):
+	def __init__(self,h_ref,yaw_ref):
+		smach.State.__init__(self,outcomes=['outcome2'])
+		self.h_reff = h_ref
+		self.yaw_reff = yaw_ref
+		self.pose_pub = rospy.Publisher('/relative_pose', Pose, queue_size = 1)
+        self.state_sub = rospy.Subscriber('/current_state', Pose, state_cb)
+		self.vel = Pose()
+		self.curr_state = Pose()
+
+	def state_cb(self,data):
+		self.curr_state = data
+
+	def execute(self, userdata):
+		
+		self.vel.position.x = 0.0
+		self.vel.position.y = 0.0
+		self.vel.position.z = 0.0
+		self.vel.orientation.x = 0.0
+		self.vel.orientation.y = 0.0
+		self.vel.orientation.z = 0.0
+		
+		flag_ob = Flag_sub()
+		rospy.loginfo("Preparing for bridge")
+		rate = rospy.Rate(10)
+		flag = Bool()
+		flag.data = False
+		flag_ob.flag_pub.publish(flag)
+		while(not(abs(self.h_reff - self.curr_state.position.z)<=0.08 and abs(self.yaw_reff - self.curr_state.orientation.z)<=0.08) and not rospy.is_shutdown()):
+			print("this is a test")
+			self.vel.position.x = self.rel_err
+			self.pose_pub.publish(self.vel)
+			self.rel_err -= 0.05
+			rate.sleep()			
+		return 'outcome2'
+
 
 # define state Bridge detection
 
@@ -138,8 +174,10 @@ def main():
                                # transitions={'outcome2':'WINDOW'})
 
         smach.StateMachine.add('WINDOW', WindowDetection(), 
+                               transitions={'outcome2':'PFB'})
+		
+		smach.StateMachine.add('PFB', PrepareForBridge(), 
                                transitions={'outcome2':'LANDF'})
-
         # smach.StateMachine.add('BRIDGE', BridgeDetection(), 
         #                        transitions={'outcome2':'CCTAG'})
 
