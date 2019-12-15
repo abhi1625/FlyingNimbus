@@ -202,10 +202,24 @@ class PrepareForBridge(smach.State):
 class BridgeDetection(smach.State):
 	def __init__(self):
 		smach.State.__init__(self,outcomes=['outcome2'])
+		self.StereoVO_obj = StereoVO()
+
 
 	def execute(self, userdata):
 		rospy.loginfo("Executing Bridge detection")
 		# call Bridge detection script
+		rate = rospy.Rate(10)
+		flag_ob = Flag_sub()
+		flag = Bool()
+		flag.data = False
+		flag_ob.flag_pub.publish(flag)
+		while(not rospy.is_shutdown()):
+			self.StereoVO_obj.run_pipeline()
+			rate.sleep()
+			if(flag_ob.flag.data):
+				return 'outcome2'
+				break
+		return 'outcome2'
 
 
 # define state CCTag detection
@@ -285,7 +299,8 @@ def main():
     with sm:
     # Add states to the container
 	#smach.StateMachine.add('TAKEOFF', TakeOff(0.8), transitions={'outcome2':'CCTAG'})
-    	smach.StateMachine.add('CCTAG', CCTagDetection(), transitions={'outcome2':'SMend'})
+    	# smach.StateMachine.add('CCTAG', CCTagDetection(), transitions={'outcome2':'SMend'})
+    	smach.StateMachine.add('BRIDGE',BridgeDetection(), transitions={'outcome2':'SMend'})
     	smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), transitions={'outcome2':'WINDOW'})
     	smach.StateMachine.add('WINDOW', WindowDetection(), transitions={'outcome2':'PUNCH'})
     	#rospy.sleep(2)		#print("This was a success")
