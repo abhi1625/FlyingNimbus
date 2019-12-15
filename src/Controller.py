@@ -106,7 +106,11 @@ class Controller:
 		self.vel.linear.x = 0.2
 	    else:
 		self.vel.linear.x = 0.0
-        #if y_cmd > 0.15 :
+	elif(self.target.position.x == 0.0 and self.target.position.y == 0.0 and self.target.position.z == 0.0):
+            self.vel.linear.x = 0.0
+	    self.vel.linear.y = 0.0
+	    self.vel.linear.z = 0.0
+	#if y_cmd > 0.15 :
         #    self.vel.linear.y = 0.15
         #elif y_cmd < -0.15:
         #    self.vel.linear.y = -0.15

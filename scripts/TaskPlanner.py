@@ -29,11 +29,11 @@ class TakeOff(smach.State):
 		vel = Twist()
 		vel.linear.z = 0.6
 		rospy.sleep(3)
-		self.move_up.publish(vel)
-		rospy.sleep(2)
-		self.move_up.publish(vel)
-		rospy.sleep(2)
-		self.move_up.publish(vel)
+		#self.move_up.publish(vel)
+		#rospy.sleep(2)
+		#self.move_up.publish(vel)
+		#rospy.sleep(2)
+		#self.move_up.publish(vel)
 		return 'outcome2'
 
 # define state First wall detection
@@ -116,6 +116,8 @@ class Punch_forward(smach.State):
 		while(self.rel_err>=0.0 and not rospy.is_shutdown()):
 			print("this is a test")
 			vel.position.x = self.rel_err
+			if (vel.position.x >1.0):
+				vel.position.x = 1.0
 			self.pose_pub.publish(vel)
 			self.rel_err -= 0.05
 			rate.sleep()
@@ -237,20 +239,21 @@ def main():
     with sm:
         # Add states to the container
         smach.StateMachine.add('TAKEOFF', TakeOff(), 
-                               transitions={'outcome2':'WINDOW'})
+                               transitions={'outcome2':'FIRSTWALL'})
         
-        # smach.StateMachine.add('FIRSTWALL', FirstWall(), 
-        #                        transitions={'outcome2':'LANDF'})
+        smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), 
+                                transitions={'outcome2':'WINDOW'})
 
         smach.StateMachine.add('WINDOW', WindowDetection(), 
                               transitions={'outcome2':'PUNCH'})
         
-		#print("This was a success")
-	smach.StateMachine.add('PUNCH',Punch_forward(1.0), transitions={'outcome2':'PREP'})
+	#rospy.sleep(2)		#print("This was a success")
+	smach.StateMachine.add('PUNCH',Punch_forward(1.5), transitions={'outcome2':'PREP'})
+	#smach.StateMachine.add('PUNCH1',Punch_forward(1.0), transitions={'outcome2':'SMend'})
         # smach.StateMachine.add('BRIDGE', BridgeDetection(), 
 	print("This was a success 2")
 
-	smach.StateMachine.add('PREP',PrepareForBridge(0.5,1.2), transitions={'outcome2':'SMend'})
+	smach.StateMachine.add('PREP',PrepareForBridge(0.4,1.2), transitions={'outcome2':'SMend'})
         #                        transitions={'outcome2':'CCTAG'})
 
         # smach.StateMachine.add('CCTAG', CCTagDetection(), 
