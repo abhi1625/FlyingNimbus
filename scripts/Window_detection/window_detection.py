@@ -75,20 +75,20 @@ class Window_detection:
 
 	def segment_window(self,cv_image):
 		# window param night light 100%
-		thresh_r_min=187
-		thresh_g_min=139
-		thresh_b_min=49
+		thresh_r_min=150
+		thresh_g_min=100
+		thresh_b_min=40
 		thresh_r_max=255
 		thresh_g_max=255
-		thresh_b_max=120
+		thresh_b_max=100
 
 		# window param day 8:30 a.m. light 100%
-		#thresh_r_min=250
-		#thresh_g_min=163
-		#thresh_b_min=90
-		#thresh_r_max=255
-		#thresh_g_max=255
-		#thresh_b_max=167
+		# thresh_r_min=250
+		# thresh_g_min=163
+		# thresh_b_min=90
+		# thresh_r_max=255
+		# thresh_g_max=255
+		# thresh_b_max=167
 
 		mask = cv2.inRange(cv_image,np.array([thresh_b_min, thresh_g_min, thresh_r_min]),np.array([thresh_b_max, thresh_g_max, thresh_r_max]))
 
@@ -145,10 +145,10 @@ class Window_detection:
 	def pnp(self, imgPoints,img):
 		h,w = img.shape[:2]
 		# World coordinates using window measurement in world
-		objPoints = np.array([[0,0,0],
-							 [84,0,0],
-							 [81,43,0],
-							 [3,43,0]], dtype=np.float64)
+		objPoints = np.array([[-42.0,-21.5,0],
+							 [42.0,-21.5,0],
+							 [42,21.5,0],
+							 [-42,21.5,0]], dtype=np.float64)
 
 		# Camera K matrix(intrinsic params)
 		camMatrix = np.array([[689.632, 0 , 664.887],[0, 687.574, 376.0835],[0,0,1]],dtype=np.float32)
