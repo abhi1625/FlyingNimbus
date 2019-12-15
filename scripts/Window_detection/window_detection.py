@@ -24,6 +24,7 @@ class video_stream:
 		self.image_sub = rospy.Subscriber("/image_raw", Image, self.img_callback)
 		self.window_detection = Window_detection()
 		rospack = rospkg.RosPack()
+		self.image = None
 		# pkg_path = rospack.get_path('noob_quaternions')
 
 		#print(pkg_path)
@@ -41,8 +42,18 @@ class video_stream:
 		
 		if cv_image is not None:
 			# processed_img = preprocess_img(cv_image)
-			mask = self.window_detection.segment_window(cv_image)
-			self.window_detection.detection_hough_lines(cv_image,mask)
+			self.image = cv_image
+			
+
+	def execute(self):
+		if self.image is not None:
+			try:
+				mask = self.window_detection.segment_window(self.image)
+				self.window_detection.detection_hough_lines(self.image,mask)
+			except Exception as e:
+				print e
+		else:
+			print('Image is "None"')
 
 		
 	

@@ -47,7 +47,7 @@ class FirstWall():
 	def execute(self):
 		rospy.loginfo("Executing first wall detection")
 		# call wall detection script
-		ob = video_stream()
+		ob = vid_stream()
 		count = 0
 		rate = rospy.Rate(10)
 		flag = Bool()
@@ -67,14 +67,14 @@ class FirstWall():
 
 class WindowDetection():
 	def __init__(self):
-		pass
+		self.ob = video_stream()
 	def __del__(self):
 		print("deleted window detection object")
+		del self.ob
 	def execute(self):
 		flag_ob = Flag_sub()
 		rospy.loginfo("Executing Window detection")
 		# call Window detection script
-		ob = video_stream()
 		count = 0
 		rate = rospy.Rate(10)
 		flag = Bool()
@@ -82,6 +82,8 @@ class WindowDetection():
 		print("success")
 		flag_ob.flag_pub.publish(flag)
 		while(not rospy.is_shutdown()):
+			print("exit flag",flag_ob.flag.data)
+			self.ob.execute()
 			rate.sleep()
 			#print count
 			count+=1
@@ -124,6 +126,56 @@ class Punch_forward():
 		vel.position.x = 0.0
 		self.pose_pub.publish(vel)					
 		return 'outcome'
+
+
+
+class GenXYZMove():
+	def __init__(self,x_ref,y_ref,z_ref):
+		self.x_target = x_ref
+		self.y_target = y_ref
+		self.z_target = z_ref
+
+		# self.yaw_err = yaw_err
+		self.pose_pub = rospy.Publisher('/relative_pose', Pose, queue_size = 1)
+	        self.state_sub = rospy.Subscriber('/current_state', Pose, self.state_cb)
+		self.vel = Pose()
+		self.curr_state = Pose()
+
+	def __del__(self):
+		print("deleted GenXYZMove object")
+
+	def state_cb(self,data):
+		self.curr_state = data
+
+	def execute(self):
+		
+		self.vel.position.x = 0.0
+		self.vel.position.y = 0.0
+		self.vel.position.z = 0.0
+		self.vel.orientation.x = 0.0
+		self.vel.orientation.y = 0.0
+		self.vel.orientation.z = 0.0
+		
+		flag_ob = Flag_sub()
+		rate = rospy.Rate(10)
+		flag = Bool()
+		flag.data = False
+		flag_ob.flag_pub.publish(flag)
+		while(not(abs(self.x_target - self.curr_state.position.x)<=0.08 and
+				  abs(self.x_target - self.curr_state.position.y)<=0.08
+				  abs(self.x_target - self.curr_state.position.z)<=0.08) and
+				   not rospy.is_shutdown()):
+			# print("this is a test")
+			self.vel.position.z = self.h_reff - self.curr_state.position.z
+			self.vel.orientation.z = self.yaw_err
+			self.pose_pub.publish(self.vel)
+			self.yaw_err -= 0.05
+			rate.sleep()
+		self.vel.position.z = 0.0
+		self.vel.orientation.z = 0.0
+		self.pose_pub.publish(self.vel)	
+		return 'outcome'
+
 
 
 
@@ -230,7 +282,7 @@ class Land():
 
 # main
 def main():
-    rospy.init_node('task_planner')
+	rospy.init_node('task_planner')
 
 	# execute take off
 	takeoff_ob = TakeOff()
