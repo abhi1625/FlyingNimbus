@@ -27,7 +27,7 @@ class TakeOff(smach.State):
 		rospy.loginfo('Executing take off')
 		self.takeoff_pub.publish()
 		vel = Twist()
-		vel.linear.z = 0.5
+		vel.linear.z = 0.6
 		rospy.sleep(3)
 		self.move_up.publish(vel)
 		rospy.sleep(2)
@@ -128,7 +128,7 @@ class PrepareForBridge(smach.State):
 		self.h_reff = h_ref
 		self.yaw_err = yaw_err
 		self.pose_pub = rospy.Publisher('/relative_pose', Pose, queue_size = 1)
-        self.state_sub = rospy.Subscriber('/current_state', Pose, state_cb)
+	        self.state_sub = rospy.Subscriber('/current_state', Pose, self.state_cb)
 		self.vel = Pose()
 		self.curr_state = Pose()
 
@@ -243,13 +243,11 @@ def main():
                               transitions={'outcome2':'PUNCH'})
         
 		#print("This was a success")
-		smach.StateMachine.add('PUNCH',Punch_forward(1.0), 
-	                              transitions={'outcome2':'PREP'})
+	smach.StateMachine.add('PUNCH',Punch_forward(1.0), transitions={'outcome2':'PREP'})
         # smach.StateMachine.add('BRIDGE', BridgeDetection(), 
-		print("This was a success 2")
+	print("This was a success 2")
 
-		smach.StateMachine.add('PREP',PrepareForBridge(0.5,1.2), 
-	                              transitions={'outcome2':'SMend'})
+	smach.StateMachine.add('PREP',PrepareForBridge(0.5,1.2), transitions={'outcome2':'SMend'})
         #                        transitions={'outcome2':'CCTAG'})
 
         # smach.StateMachine.add('CCTAG', CCTagDetection(), 

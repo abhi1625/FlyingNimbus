@@ -318,9 +318,10 @@ class Window_detection:
 
 def main():
 	count = 0
+	rospy.init_node('image_reader',anonymous=True)
 	ob = video_stream()
 
-	rospy.init_node('image_reader', anonymous=True)
+	#rospy.init_node('image_reader', anonymous=True)
 	rate = rospy.Rate(30)
 	while(not rospy.is_shutdown()):
 		# rospy.spin()
