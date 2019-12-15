@@ -115,7 +115,9 @@ class Punch_forward(smach.State):
 			vel.position.x = self.rel_err
 			self.pose_pub.publish(vel)
 			self.rel_err -= 0.05
-			rate.sleep()			
+			rate.sleep()
+		vel.position.x = 0.0
+		self.pose_pub.publish(vel)					
 		return 'outcome2'
 
 # define state Bridge detection
@@ -199,7 +201,7 @@ def main():
         smach.StateMachine.add('WINDOW', WindowDetection(), 
                               transitions={'outcome2':'PUNCH'})
         
-	print("This was a success")
+	#print("This was a success")
 	smach.StateMachine.add('PUNCH',Punch_forward(1.0), 
                               transitions={'outcome2':'SMend'})
         # smach.StateMachine.add('BRIDGE', BridgeDetection(), 
