@@ -91,14 +91,16 @@ class Controller:
         #    self.vel.linear.x = -0.2
         #else :
 	print("curr x pos perceived", self.target.position.x)
-	if(self.target.position.x >=1.5):
-            self.vel.linear.x = 0.01 
+	print("curr y perceived", self.target.position.y)
+	if(self.target.position.x >=1.2):
+            self.vel.linear.x = 0.015 
 	elif (self.target.position.x> 0.0 and self.target.position.x<1.2):
-	    if (abs(self.target.position.y)<0.05 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.1 and self.target.position.y != 0.0 and self.target.position.z != 0.0 ):
+	    if (abs(self.target.position.y)<0.1 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.2 and self.target.position.y != 0.0 and self.target.position.z != 0.0 ):
 	    	self.vel.linear.x = 0.0
             	flag = Bool()
             	flag.data = True
             	self.flag_pub.publish(flag)
+		print("WOOOOOOOOOHHHHHHHHOOOOOOOOOOOOOO")
 	    elif(self.target.position.y == 0.0 and self.target.position.z == 0.0):
 		    
 		self.vel.linear.x = 0.2

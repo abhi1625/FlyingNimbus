@@ -316,18 +316,18 @@ class Window_detection:
 
 
 
-def main():
-	count = 0
-	rospy.init_node('image_reader',anonymous=True)
-	ob = video_stream()
-
-	#rospy.init_node('image_reader', anonymous=True)
-	rate = rospy.Rate(30)
-	while(not rospy.is_shutdown()):
-		# rospy.spin()
-		# ob.processing()
-		count += 1;
-		rate.sleep()
-
-if __name__ == '__main__':
-	main()
+#def main():
+#	count = 0
+#	rospy.init_node('image_reader',anonymous=True)
+#	ob = video_stream()
+#
+#	#rospy.init_node('image_reader', anonymous=True)
+#	rate = rospy.Rate(30)
+#	while(not rospy.is_shutdown()):
+#		# rospy.spin()
+#		# ob.processing()
+#		count += 1;
+#		rate.sleep()
+#
+#if __name__ == '__main__':
+#	main()

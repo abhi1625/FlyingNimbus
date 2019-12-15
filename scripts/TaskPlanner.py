@@ -84,6 +84,7 @@ class WindowDetection(smach.State):
 			#print count
 			count+=1
 			if(flag_ob.flag.data):
+				return 'outcome2'
 				break
 		return 'outcome2'
 
