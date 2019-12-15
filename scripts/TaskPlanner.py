@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy 
-import smach
+# import smach
 from std_msgs.msg import Empty, Bool
 from Window_detection.window_detection import video_stream
 from Wall_detection.video_stream import video_stream as vid_stream
@@ -16,14 +16,16 @@ class Flag_sub:
 		print("cb success")
 		self.flag = data 
 
-class TakeOff(smach.State):
+class TakeOff():
 	"""docstring for ClassName"""
 	def __init__(self):
-		smach.State.__init__(self,outcomes=['outcome2'])
 		self.takeoff_pub = rospy.Publisher('/bebop/takeoff', Empty, queue_size=1 , latch=True)
-		self.move_up = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size=1) 
+		self.move_up = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size=1)
 
-	def execute(self,userdata):
+	def __del__(self):
+		print("deleted takeoff object")
+
+	def execute(self):
 		rospy.loginfo('Executing take off')
 		self.takeoff_pub.publish()
 		vel = Twist()
@@ -34,16 +36,15 @@ class TakeOff(smach.State):
 		self.move_up.publish(vel)
 		rospy.sleep(2)
 		self.move_up.publish(vel)
-		return 'outcome2'
+		return 'outcome'
 
 # define state First wall detection
 
-class FirstWall(smach.State):
-	def __init__(self):
-		smach.State.__init__(self,outcomes=['outcome2'])
+class FirstWall():
+	def __init__():
 		self.flag_ob = Flag_sub()
 
-	def execute(self, userdata):
+	def execute(self):
 		rospy.loginfo("Executing first wall detection")
 		# call wall detection script
 		ob = video_stream()
@@ -59,16 +60,17 @@ class FirstWall(smach.State):
 			count +=1
 			if(self.flag_ob.flag.data):
 				break	
-		return 'outcome2'
+		return 'outcome'
 
 
 # define state First wall detection
 
-class WindowDetection(smach.State):
+class WindowDetection():
 	def __init__(self):
-		smach.State.__init__(self,outcomes=['outcome2'])
-
-	def execute(self, userdata):
+		pass
+	def __del__(self):
+		print("deleted window detection object")
+	def execute(self):
 		flag_ob = Flag_sub()
 		rospy.loginfo("Executing Window detection")
 		# call Window detection script
@@ -84,17 +86,19 @@ class WindowDetection(smach.State):
 			#print count
 			count+=1
 			if(flag_ob.flag.data):
-				return 'outcome2'
+				return 'outcome'
 				break
-		return 'outcome2'
+		return 'outcome'
 
-class Punch_forward(smach.State):
+class Punch_forward():
 	def __init__(self,err):
-		smach.State.__init__(self,outcomes=['outcome2'])
 		self.rel_err = err
 		self.pose_pub = rospy.Publisher('/relative_pose', Pose, queue_size = 1)
+
+	def __del__(self):
+		print("deleted Punch object")
 	
-	def execute(self, userdata):
+	def execute(self):
 		print("sleeping for 2 secs")
 		rospy.sleep(2)
 		vel = Pose()
@@ -119,13 +123,12 @@ class Punch_forward(smach.State):
 			rate.sleep()
 		vel.position.x = 0.0
 		self.pose_pub.publish(vel)					
-		return 'outcome2'
+		return 'outcome'
 
 
 
-class PrepareForBridge(smach.State):
+class PrepareForBridge():
 	def __init__(self,h_ref,yaw_err):
-		smach.State.__init__(self,outcomes=['outcome2'])
 		self.h_reff = h_ref
 		self.yaw_err = yaw_err
 		self.pose_pub = rospy.Publisher('/relative_pose', Pose, queue_size = 1)
@@ -133,10 +136,13 @@ class PrepareForBridge(smach.State):
 		self.vel = Pose()
 		self.curr_state = Pose()
 
+	def __del__(self):
+		print("deleted prepare for bridge object")
+
 	def state_cb(self,data):
 		self.curr_state = data
 
-	def execute(self, userdata):
+	def execute(self):
 		
 		self.vel.position.x = 0.0
 		self.vel.position.y = 0.0
@@ -161,25 +167,26 @@ class PrepareForBridge(smach.State):
 		self.vel.position.z = 0.0
 		self.vel.orientation.z = 0.0
 		self.pose_pub.publish(self.vel)	
-		return 'outcome2'
+		return 'outcome'
 # define state Bridge detection
 
-class BridgeDetection(smach.State):
+class BridgeDetection():
 	def __init__(self):
-		smach.State.__init__(self,outcomes=['outcome2'])
+		pass
+	def __del__(self):
+		print("deleted object")
 
-	def execute(self, userdata):
+	def execute(self):
 		rospy.loginfo("Executing Bridge detection")
 		# call Bridge detection script
 
 
 # define state CCTag detection
 
-class CCTagDetection(smach.State):
+class CCTagDetection():
 	def __init__(self):
-		smach.State.__init__(self,outcomes=['outcome2'])
-
-	def execute(self, userdata):
+		pass
+	def execute(self):
 		rospy.loginfo("Executing CCTag detection")
 		# call CCTag detection script
 
@@ -187,11 +194,10 @@ class CCTagDetection(smach.State):
 
 # define state SecondWall detection
 
-class SecondWall(smach.State):
+class SecondWall():
 	def __init__(self):
-		smach.State.__init__(self,outcomes=['outcome2'])
-
-	def execute(self, userdata):
+		pass
+	def execute(self):
 		rospy.loginfo("Executing SecondWall detection")
 		# call SecondWall detection script
 
@@ -199,11 +205,10 @@ class SecondWall(smach.State):
 
 # define state Square Tag detection
 
-class SquareTagDetection(smach.State):
+class SquareTagDetection():
 	def __init__(self):
-		smach.State.__init__(self,outcomes=['outcome2'])
-
-	def execute(self, userdata):
+		pass
+	def execute(self):
 		rospy.loginfo("Executing square tag detection")
 		# call square tag detection script
 
@@ -211,66 +216,42 @@ class SquareTagDetection(smach.State):
 
 # define state land
 
-class Land(smach.State):
+class Land():
 	"""docstring for ClassName"""
 	def __init__(self):
-		smach.State.__init__(self,outcomes=['outcome2'])
 		self.land_pub = rospy.Publisher('/bebop/land', Empty, queue_size=1 , latch=True)
 		
-	def execute(self,userdata):
+	def execute(self):
 		rospy.loginfo('Executing landing command')
 		self.land_pub.publish()
 		rospy.sleep(3)
-		return 'outcome2'
+		return 'outcome'
 
 
 # main
 def main():
     rospy.init_node('task_planner')
 
-    # Create a SMACH state machine
-    sm = smach.StateMachine(outcomes=['SMend', 'outcome5'])
+	# execute take off
+	takeoff_ob = TakeOff()
+	ret = takeoff_ob.execute()
+	del takeoff_ob
 
-    # Open the container
-    with sm:
-        # Add states to the container
-        smach.StateMachine.add('TAKEOFF', TakeOff(), 
-                               transitions={'outcome2':'WINDOW'})
-        
-        # smach.StateMachine.add('FIRSTWALL', FirstWall(), 
-        #                        transitions={'outcome2':'LANDF'})
+	window_ob = WindowDetection()
+	ret = window_ob.execute()
+	del window_ob
 
-        smach.StateMachine.add('WINDOW', WindowDetection(), 
-                              transitions={'outcome2':'PUNCH'})
-        
-		#print("This was a success")
-	smach.StateMachine.add('PUNCH',Punch_forward(1.0), transitions={'outcome2':'PREP'})
-        # smach.StateMachine.add('BRIDGE', BridgeDetection(), 
-	print("This was a success 2")
+	punch_ob = Punch_forward(1.0)
+	ret = punch_ob.execute()
+	del punch_ob
 
-	smach.StateMachine.add('PREP',PrepareForBridge(0.5,1.2), transitions={'outcome2':'SMend'})
-        #                        transitions={'outcome2':'CCTAG'})
+	prep_bridge_ob = PrepareForBridge(0.5,1.2)
+	ret  = prep_bridge_ob.execute()
+	del prep_bridge_ob
 
-        # smach.StateMachine.add('CCTAG', CCTagDetection(), 
-        #                        transitions={'outcome2':'LANDCC'})
-
-        # smach.StateMachine.add('LANDCC', Land(), 
-        #                        transitions={'outcome2':'TAKEOFFSW'})
-
-        # smach.StateMachine.add('TAKEOFFSW', TakeOff(), 
-        #                        transitions={'outcome2':'SECONDWALL'})
-
-        # smach.StateMachine.add('SECONDWALL', SecondWall(), 
-        #                        transitions={'outcome2':'SQTAG'})
-
-        # smach.StateMachine.add('SQTAG', SquareTagDetection(), 
-                               # transitions={'outcome2':'LANDF'})
-
-        smach.StateMachine.add('LANDF', Land(), 
-                               transitions={'outcome2':'SMend'})
-
-    # Execute SMACH plan
-    outcome = sm.execute()
+	land_ob = Land()
+	ret = land_ob.execute()
+	del land_ob
 
 
 if __name__ == '__main__':
