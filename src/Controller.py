@@ -83,6 +83,7 @@ class Controller:
         y_cmd = - np.matmul(gains, y_pos)[0]
         z_cmd =   next_des[2]
         yaw_cmd = -delta_th
+	self.vel.linear.x = self.target.position.x
 	#print("xcmd = {}, ycmd = {}, zcmd = {}, yawcmd = {}".format(x_cmd, y_cmd, z_cmd, yaw_cmd))
         # clip the x, y and yaw commands
         #if x_cmd > 0.2 :

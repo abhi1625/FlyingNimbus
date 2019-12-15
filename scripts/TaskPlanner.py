@@ -24,7 +24,7 @@ class TakeOff(smach.State):
 		self.move_up = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size=1)
 		self.h_reff = h_ref
 		self.pose_pub = rospy.Publisher('/relative_pose', Pose, queue_size = 1)
-	    self.state_sub = rospy.Subscriber('/current_state', Pose, self.state_cb)
+		self.state_sub = rospy.Subscriber('/current_state', Pose, self.state_cb)
 		self.vel = Pose()
 		self.curr_state = Pose()
 
@@ -36,7 +36,8 @@ class TakeOff(smach.State):
 		rospy.loginfo('Executing take off')
 		self.takeoff_pub.publish()
 		rospy.sleep(3)
-
+		
+		rate = rospy.Rate(10)
 		self.vel.position.x = 0.0
 		self.vel.position.y = 0.0
 		self.vel.position.z = 0.0
@@ -127,7 +128,7 @@ class Punch_forward(smach.State):
 	
 	def execute(self, userdata):
 		print("sleeping for 2 secs")
-		# rospy.sleep(2)
+		rospy.sleep(2)
 		vel = Pose()
 		vel.position.x = 0.0
 		vel.position.y = 0.0
@@ -184,12 +185,12 @@ class PrepareForBridge(smach.State):
 		flag = Bool()
 		flag.data = False
 		flag_ob.flag_pub.publish(flag)
-		while(not(abs(self.h_reff - self.curr_state.position.z)<=0.08 and abs(self.yaw_err)<=0.08) and not rospy.is_shutdown()):
+		while(not(abs(self.h_reff - self.curr_state.position.z)<=0.08 and abs(self.yaw_err)<=0.2) and not rospy.is_shutdown()):
 			# print("this is a test")
 			self.vel.position.z = self.h_reff - self.curr_state.position.z
-			self.vel.orientation.z = self.yaw_err
+			self.vel.orientation.z = -6.0 #self.yaw_err
 			self.pose_pub.publish(self.vel)
-			self.yaw_err -= 0.05
+			self.yaw_err -= 0.2
 			rate.sleep()
 		self.vel.position.z = 0.0
 		self.vel.orientation.z = 0.0
@@ -267,13 +268,14 @@ def main():
     # Open the container
     with sm:
         # Add states to the container
-        smach.StateMachine.add('TAKEOFF', TakeOff(1.2), 
+        smach.StateMachine.add('TAKEOFF', TakeOff(1.5), 
                                transitions={'outcome2':'FIRSTWALL'})
         
         smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), 
-                                transitions={'outcome2':'WINDOW'})
+                                transitions={'outcome2':'YAW'})
 
-        smach.StateMachine.add('WINDOW', WindowDetection(), 
+        smach.StateMachine.add('YAW',PrepareForBridge(1.5,2.0),transitions={'outcome2':'WINDOW'})
+	smach.StateMachine.add('WINDOW', WindowDetection(), 
                               transitions={'outcome2':'PUNCH'})
         
 	#rospy.sleep(2)		#print("This was a success")
@@ -282,7 +284,7 @@ def main():
         # smach.StateMachine.add('BRIDGE', BridgeDetection(), 
 	print("This was a success 2")
 
-	smach.StateMachine.add('PREP',PrepareForBridge(0.4,1.2), transitions={'outcome2':'SMend'})
+	smach.StateMachine.add('PREP',PrepareForBridge(0.6,6.0), transitions={'outcome2':'SMend'})
         #                        transitions={'outcome2':'CCTAG'})
 
         # smach.StateMachine.add('CCTAG', CCTagDetection(), 
