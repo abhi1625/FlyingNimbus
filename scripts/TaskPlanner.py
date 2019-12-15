@@ -6,6 +6,7 @@ from Window_detection.window_detection import video_stream
 from Wall_detection.video_stream import video_stream as vid_stream
 from CCtag.tag_detection import BullsEyeDetection
 from geometry_msgs.msg import Twist, Pose
+from Bridge_detection.river import StereoVO
 # define state takeoff
 class Flag_sub:
 	def __init__(self):
@@ -298,8 +299,8 @@ def main():
     # Open the container
     with sm:
     # Add states to the container
-	#smach.StateMachine.add('TAKEOFF', TakeOff(0.8), transitions={'outcome2':'CCTAG'})
-    	# smach.StateMachine.add('CCTAG', CCTagDetection(), transitions={'outcome2':'SMend'})
+	smach.StateMachine.add('TAKEOFF', TakeOff(0.4), transitions={'outcome2':'BRIDGE'})
+    	smach.StateMachine.add('CCTAG', CCTagDetection(), transitions={'outcome2':'SMend'})
     	smach.StateMachine.add('BRIDGE',BridgeDetection(), transitions={'outcome2':'SMend'})
     	smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), transitions={'outcome2':'WINDOW'})
     	smach.StateMachine.add('WINDOW', WindowDetection(), transitions={'outcome2':'PUNCH'})

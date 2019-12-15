@@ -1,4 +1,5 @@
 <launch>
     <node pkg="FlyingNimbus" type="StateEstimate.py" name="estimation_node" respawn="true"/>
+    <node pkg="FlyingNimbus" type="Controller.py" name="controller_node" respawn="true"/>
     <node pkg="FlyingNimbus" type="TaskPlanner.py" name="task_planner"  output="screen"/>
 </launch>

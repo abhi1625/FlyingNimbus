@@ -24,7 +24,7 @@ class StereoVO:
 		# self.image_sub_r = rospy.Subscriber("/duo3d/right/image_rect", Image, self.img_cb_l)
 		self.image_sub_mono = rospy.Subscriber("/image_raw", Image, self.img_cb_mono)
 		# self.odom_sub = rospy.Subscriber('/bebop/odom', Odometry, self.odom_callback)
-        self.state_pub = rospy.Subscriber('/current_state', Pose, odom_callback)
+        	self.state_pub = rospy.Subscriber('/current_state', Pose, self.odom_callback)
 		self.blobs_pub = rospy.Publisher("/blobs_img", Image, queue_size = 1)
 		self.bridge_pub = rospy.Publisher("/bridge_img", Image, queue_size = 1)
 		self.pose_pub = rospy.Publisher("/relative_pose", Pose, queue_size = 1)
@@ -55,11 +55,11 @@ class StereoVO:
 
 		# self.f_mono = 0.5*(self.K_mono[0,0]+self.K_mono[1,1])   #cm
 		
-		self.f_stereo = 0.5*(self.K_stereo[0,0]+self.K_stereo[1,1])   #cm
+		#self.f_stereo = 0.5*(self.K_stereo[0,0]+self.K_stereo[1,1])   #cm
 		# self.baseline_stereo = 3.0 #cm
 		# self.features = None
 		self.pose = Pose()
-		self.relative_pose_msg = Pose()
+		self.relative_pose = Pose()
 		# fig = plt.figure()
 		# self.ax = fig.gca(projection ='3d')
 		self.h = 720 
@@ -157,21 +157,21 @@ class StereoVO:
 		# thresh_g_max=205
 		# thresh_b_max=255
 
-		# # river params bright day
-		# thresh_r_min=16
-		# thresh_g_min=43
-		# thresh_b_min=0
-		# thresh_r_max=88
-		# thresh_g_max=255
-		# thresh_b_max=255
+		# # river params day light 100
+		thresh_r_min=119
+		thresh_g_min=138
+		thresh_b_min=178
+		thresh_r_max=152
+		thresh_g_max=209
+		thresh_b_max=255
 
 		# river params bright day
-		thresh_r_min=16
-		thresh_g_min=72
-		thresh_b_min=0
-		thresh_r_max=110
-		thresh_g_max=248
-		thresh_b_max=248
+		#thresh_r_min=16
+		#thresh_g_min=72
+		#thresh_b_min=0
+		#thresh_r_max=110
+		#thresh_g_max=248
+		#thresh_b_max=248
 
 		cv_image[cv_image[:,:,0] < thresh_b_min]=0
 		cv_image[cv_image[:,:,1] < thresh_g_min]=0
@@ -459,33 +459,34 @@ class StereoVO:
 		curr_frame = self.img_mono
 
 		status, error = self.bridge_detect(curr_frame)
-		
+		curr_h = self.pose.position.z
 		if (status == True):
 
 			error = error/float(self.w)
 			self.relative_pose.position.x = 0.0
 			self.relative_pose.position.y = error
 			self.relative_pose.position.z = 0.0
+			if (curr_h>0.4):
+			    self.relative_pose.position.z = -0.03
 			self.relative_pose.orientation.x = 0.0
 			self.relative_pose.orientation.y = 0.0
-			self.relative_pose.orientation.z = -error
-			self.pose_pub.publish(self.relative_pose_msg)
+			self.relative_pose.orientation.z = -error*2.0
+			self.pose_pub.publish(self.relative_pose)
 			# self.vel.linear.y = error
 			# self.vel.linear.x = 0.0
 			# self.vel.linear.z= 0.0
 			# self.track_ob.bebop_vel_pub.publish(self.vel)
 		elif (status == False):
-			curr_h = self.pose.position.z
-			if(curr_h>0.5):
-				self.relative_pose.position.x = - 0.05
+			if(curr_h>0.4):
+				self.relative_pose.position.x = - 0.03
 				self.relative_pose.position.y = 0.0
-				self.relative_pose.position.z = - 0.05
+				self.relative_pose.position.z = - 0.03
 			else:
-				self.relative_pose.position.x = - 0.05
+				self.relative_pose.position.x = - 0.03
 				self.relative_pose.position.y = 0.0
 				self.relative_pose.position.z = 0.0
 			
-		self.pose_pub.publish(self.relative_pose_msg)
+		self.pose_pub.publish(self.relative_pose)
 		print("status {} and error {} ".format(status, error))
 
 # def main():
