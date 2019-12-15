@@ -67,12 +67,12 @@ class FirstWall(smach.State):
 class WindowDetection(smach.State):
 	def __init__(self):
 		smach.State.__init__(self,outcomes=['outcome2'])
+		self.ob = video_stream()
 
 	def execute(self, userdata):
 		flag_ob = Flag_sub()
 		rospy.loginfo("Executing Window detection")
 		# call Window detection script
-		ob = video_stream()
 		count = 0
 		rate = rospy.Rate(10)
 		flag = Bool()
@@ -80,6 +80,8 @@ class WindowDetection(smach.State):
 		print("success")
 		flag_ob.flag_pub.publish(flag)
 		while(not rospy.is_shutdown()):
+			print("exit flag",flag_ob.flag.data)
+			self.ob.execute()
 			rate.sleep()
 			#print count
 			count+=1
