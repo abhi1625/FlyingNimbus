@@ -18,17 +18,46 @@ class Flag_sub:
 
 class TakeOff(smach.State):
 	"""docstring for ClassName"""
-	def __init__(self):
+	def __init__(self,h_ref):
 		smach.State.__init__(self,outcomes=['outcome2'])
 		self.takeoff_pub = rospy.Publisher('/bebop/takeoff', Empty, queue_size=1 , latch=True)
-		self.move_up = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size=1) 
+		self.move_up = rospy.Publisher('/bebop/cmd_vel', Twist, queue_size=1)
+		self.h_reff = h_ref
+		self.pose_pub = rospy.Publisher('/relative_pose', Pose, queue_size = 1)
+	    self.state_sub = rospy.Subscriber('/current_state', Pose, self.state_cb)
+		self.vel = Pose()
+		self.curr_state = Pose()
+
+	def state_cb(self,data):
+		self.curr_state = data
+
 
 	def execute(self,userdata):
 		rospy.loginfo('Executing take off')
 		self.takeoff_pub.publish()
-		vel = Twist()
-		vel.linear.z = 0.6
 		rospy.sleep(3)
+
+		self.vel.position.x = 0.0
+		self.vel.position.y = 0.0
+		self.vel.position.z = 0.0
+		self.vel.orientation.x = 0.0
+		self.vel.orientation.y = 0.0
+		self.vel.orientation.z = 0.0
+
+		while((self.h_reff - self.curr_state.position.z)>=0.08 and not rospy.is_shutdown()):
+			self.vel.position.z = self.h_reff - self.curr_state.position.z
+			self.pose_pub.publish(self.vel)
+			rate.sleep()
+		self.vel.position.x = 0.0
+		self.vel.position.y = 0.0
+		self.vel.position.z = 0.0
+		self.vel.orientation.x = 0.0
+		self.vel.orientation.y = 0.0
+		self.vel.orientation.z = 0.0
+		self.pose_pub.publish(self.vel)		
+
+		# vel = Twist()
+		# vel.linear.z = 0.6
 		#self.move_up.publish(vel)
 		#rospy.sleep(2)
 		#self.move_up.publish(vel)
@@ -98,7 +127,7 @@ class Punch_forward(smach.State):
 	
 	def execute(self, userdata):
 		print("sleeping for 2 secs")
-		rospy.sleep(2)
+		# rospy.sleep(2)
 		vel = Pose()
 		vel.position.x = 0.0
 		vel.position.y = 0.0
@@ -238,7 +267,7 @@ def main():
     # Open the container
     with sm:
         # Add states to the container
-        smach.StateMachine.add('TAKEOFF', TakeOff(), 
+        smach.StateMachine.add('TAKEOFF', TakeOff(1.2), 
                                transitions={'outcome2':'FIRSTWALL'})
         
         smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), 
