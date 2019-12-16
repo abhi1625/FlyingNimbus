@@ -373,7 +373,7 @@ def main():
 	smach.StateMachine.add('TAKEOFF', TakeOff(1.8), transitions={'outcome2':'FIRSTWALL'})
 
 	#'HEIGHT'
-	smach.StateMachine.add('HEIGHT', HeightControl(1.5), transitions={'outcome2':'FIRSTWALL'})
+	# smach.StateMachine.add('HEIGHT', HeightControl(1.5), transitions={'outcome2':'FIRSTWALL'})
 	rospy.sleep(15)
 
 
