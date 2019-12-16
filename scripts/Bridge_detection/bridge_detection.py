@@ -203,7 +203,8 @@ class bridge_detection:
 
 		if (self.rel_pose.position.x >0.0):
 			self.rel_pose.position.x += 1.2
-		self.rel_pose.position.y += 0.4
+		if(self.rel_pose.position.y > 0.0):
+			self.rel_pose.position.y += 0.4
 		if (self.rel_pose.position.y !=0.0 and  abs(self.rel_pose.position.y)<0.35):
 			flag = Bool()
 			flag.data = True

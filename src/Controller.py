@@ -83,7 +83,10 @@ class Controller:
         y_cmd = - np.matmul(gains, y_pos)[0]
         z_cmd =   next_des[2]
         yaw_cmd = -delta_th
-	self.vel.linear.x = self.gain[0]*x_cmd
+	if (self.target.position.x < 0.0):
+		self.vel.linear.x = -0.015
+	else:
+		self.vel.linear.x = self.gain[0]*x_cmd
 	#print("xcmd = {}, ycmd = {}, zcmd = {}, yawcmd = {}".format(x_cmd, y_cmd, z_cmd, yaw_cmd))
         # clip the x, y and yaw commands
         #if x_cmd > 0.2 :
@@ -149,6 +152,8 @@ class Controller:
 	#print("final x = {}, y = {}, z = {}, yaw = {}".format(self.vel.linear.x,self.vel.linear.y,self.vel.linear.z, self.vel.angular.z))
 	if (self.target.position.x == self.target.position.y == self.target.position.z == 2.0):
 		print("landing")
+	elif(abs(self.target.position.y)>1.5 or abs(self.target.position.z)>2.0):
+		print("discarding random values")
 	else:
 		self.cmd_pub.publish(self.vel)
         self.curr_vel_odom[0] = self.state.position.x 
