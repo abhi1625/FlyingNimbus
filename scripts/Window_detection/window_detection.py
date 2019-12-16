@@ -94,12 +94,12 @@ class Window_detection:
 		# thresh_b_max=100
 
 		# window param day 8:30 a.m. light 100%
-		thresh_r_min=250
-		thresh_g_min=163
-		thresh_b_min=90
+		thresh_r_min=155
+		thresh_g_min=98
+		thresh_b_min=74
 		thresh_r_max=255
-		thresh_g_max=255
-		thresh_b_max=167
+		thresh_g_max=246
+		thresh_b_max=99
 
 		mask = cv2.inRange(cv_image,np.array([thresh_b_min, thresh_g_min, thresh_r_min]),np.array([thresh_b_max, thresh_g_max, thresh_r_max]))
 

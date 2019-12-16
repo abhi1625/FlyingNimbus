@@ -49,6 +49,8 @@ class TakeOff(smach.State):
 
 		while((self.h_reff - self.curr_state.position.z)>=0.08 and not rospy.is_shutdown()):
 			self.vel.position.z = self.h_reff - self.curr_state.position.z
+			self.vel.position.x = 0.2
+			self.vel.position.y = -0.2
 			self.pose_pub.publish(self.vel)
 			rate.sleep()
 		self.vel.position.x = 0.0
@@ -210,6 +212,58 @@ class PrepareForBridge(smach.State):
 		self.vel.orientation.z = 0.0
 		self.pose_pub.publish(self.vel)	
 		return 'outcome2'
+
+
+
+
+class HeightControl(smach.State):
+	def __init__(self,h_ref):
+		smach.State.__init__(self,outcomes=['outcome2'])
+		self.h_reff = h_ref
+		self.pose_pub = rospy.Publisher('/relative_pose', Pose, queue_size = 1)
+	        self.state_sub = rospy.Subscriber('/current_state', Pose, self.state_cb)
+		self.vel = Pose()
+		self.curr_state = Pose()
+
+	def state_cb(self,data):
+		self.curr_state = data
+
+	def execute(self, userdata):
+		
+		self.vel.position.x = 0.0
+		self.vel.position.y = 0.0
+		self.vel.position.z = 0.0
+		self.vel.orientation.x = 0.0
+		self.vel.orientation.y = 0.0
+		self.vel.orientation.z = 0.0
+		
+		flag_ob = Flag_sub()
+		rospy.loginfo("Preparing for bridge")
+		rate = rospy.Rate(10)
+		flag = Bool()
+		flag.data = False
+		flag_ob.flag_pub.publish(flag)
+		#if (self.yaw_err) <0.0:
+		#	yaw_cmd = -6.0
+		#else:
+		#		yaw_cmd = 6.0
+		#self.yaw_err = abs(self.yaw_err)
+		while(not((self.h_reff - self.curr_state.position.z) < 0.1) and not rospy.is_shutdown()):
+			# print("this is a test")
+			self.vel.position.z = self.h_reff - self.curr_state.position.z
+			self.pose_pub.publish(self.vel)
+			rate.sleep()
+		self.vel.position.z = 0.0
+		self.vel.position.x = 0.0
+		self.vel.position.y = 0.0
+		self.vel.orientation.z = 0.0
+		self.pose_pub.publish(self.vel)	
+		return 'outcome2'
+
+
+
+
+
 # define state Bridge detection
 
 class BridgeDetection(smach.State):
@@ -316,16 +370,23 @@ def main():
     # Open the container
     with sm:
     # Add states to the container
-	smach.StateMachine.add('TAKEOFF', TakeOff(1.5), transitions={'outcome2':'FIRSTWALL'})
-	#rospy.sleep(15)
+	smach.StateMachine.add('TAKEOFF', TakeOff(1.8), transitions={'outcome2':'FIRSTWALL'})
+
+	#'HEIGHT'
+	smach.StateMachine.add('HEIGHT', HeightControl(1.5), transitions={'outcome2':'FIRSTWALL'})
+	rospy.sleep(15)
+
+
+	
+    	smach.StateMachine.add('FIRSTWALL', Punch_forward(1.2), transitions={'outcome2':'WINDOW'})
     	smach.StateMachine.add('WINDOWYAW',PrepareForBridge(1.5,1.5), transitions={'outcome2':'WINDOW'})
-    	smach.StateMachine.add('BRIDGE',BridgeDetection(), transitions={'outcome2':'CROSSBRIDGE'})
-    	smach.StateMachine.add('FIRSTWALL', Punch_forward(1.2), transitions={'outcome2':'WINDOWYAW'})
     	smach.StateMachine.add('WINDOW', WindowDetection(), transitions={'outcome2':'PUNCH'})
-    	##rospy.sleep(2)		#print("This was a success")
     	smach.StateMachine.add('PUNCH',Punch_forward(1.5), transitions={'outcome2':'PREP'})
-    	#print("This was a success 2")
     	smach.StateMachine.add('PREP',PrepareForBridge(1.5,3.2), transitions={'outcome2':'BRIDGE'})
+
+    	#not working as of now
+    	smach.StateMachine.add('PBRIDGE',Punch_forward(0.4), transitions={'outcome2':'BRIDGE'})
+    	smach.StateMachine.add('BRIDGE',BridgeDetection(), transitions={'outcome2':'CROSSBRIDGE'})
 	smach.StateMachine.add('CROSSBRIDGE',Punch_forward(0.8), transitions={'outcome2':'YAWCC'})
 	smach.StateMachine.add('YAWCC', PrepareForBridge(1.5, 2.8), transitions={'outcome2':'CCTAGPUNCH'})
 	smach.StateMachine.add('CCTAGPUNCH',Punch_forward(0.4), transitions={'outcome2':'CCTAG'})

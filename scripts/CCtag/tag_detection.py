@@ -22,6 +22,7 @@ class BullsEyeDetection:
 		self.tag_rad = 0.2075    #m
 		self.image_sub = rospy.Subscriber("/duo3d/left/image_rect", Image, self.img_callback)
 		self.pose_pub = rospy.Publisher("/relative_pose", Pose, queue_size = 1)
+		self.flag_pub = rospy.Publisher('/exit_flag',Bool,queue_size=1)
 		self.image = None
 		self.pose_obj = Pose()
 		self.pose_obj.position.x = 0.0			#in m
@@ -469,6 +470,10 @@ class BullsEyeDetection:
 			# center_mean= np.mean(self.centers,axis = 0)
 			# self.pose_obj.position.x = (-center_mean[1]/100)+1.2		#in m
 			# self.pose_obj.position.y = -center_mean[0]/100
+			if ((abs(self.pose_obj.position.y) < 0.2) and(-0.1 < self.pose_obj.position.x < 1.3)):
+				flag = Bool()
+				flag.data = True
+				self.flag_pub.publish(flag)
 			self.pose_pub.publish(self.pose_obj)
 		else:
 			print("Node on stand")
