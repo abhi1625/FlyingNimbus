@@ -283,9 +283,10 @@ class Land(smach.State):
 		self.land_pub = rospy.Publisher('/bebop/land', Empty, queue_size=1 , latch=True)
 		
 	def execute(self,userdata):
+		rospy.sleep(2)
 		rospy.loginfo('Executing landing command')
 		self.land_pub.publish()
-		rospy.sleep(3)
+		rospy.sleep(5)
 		return 'outcome2'
 
 
@@ -301,7 +302,7 @@ def main():
     # Add states to the container
 	smach.StateMachine.add('TAKEOFF', TakeOff(1.5), transitions={'outcome2':'CCTAG'})
 	#rospy.sleep(15)
-    	smach.StateMachine.add('CCTAG', CCTagDetection(), transitions={'outcome2':'SMend'})
+    	smach.StateMachine.add('CCTAG', CCTagDetection(), transitions={'outcome2':'LANDF'})
     	#smach.StateMachine.add('BRIDGE',BridgeDetection(), transitions={'outcome2':'SMend'})
     	#smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), transitions={'outcome2':'WINDOW'})
     	#smach.StateMachine.add('WINDOW', WindowDetection(), transitions={'outcome2':'PUNCH'})
@@ -309,7 +310,12 @@ def main():
     	#smach.StateMachine.add('PUNCH',Punch_forward(1.5), transitions={'outcome2':'PREP'})
     	#print("This was a success 2")
     	#smach.StateMachine.add('PREP',PrepareForBridge(0.4,1.2), transitions={'outcome2':'SMend'})
-    	smach.StateMachine.add('LANDF', Land(),transitions={'outcome2':'SMend'})
+    	smach.StateMachine.add('LANDF', Land(),transitions={'outcome2':'TAKEOFF2'})	
+    	smach.StateMachine.add('TAKEOFF2', TakeOff(0.9),transitions={'outcome2':'SECONDWALL'})	
+    	smach.StateMachine.add('SECONDWALL', Punch_forward(1.2),transitions={'outcome2':'TAG2'})
+    	smach.StateMachine.add('TAG2', CCTagDetection(),transitions={'outcome2':'LANDF2'})	
+    	smach.StateMachine.add('LANDF2', Land(),transitions={'outcome2':'SMend'})
+	
 
     # Execute SMACH plan
     outcome = sm.execute()

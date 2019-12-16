@@ -29,7 +29,7 @@ class Controller:
         self.curr_vel_odom = np.zeros((2,))
 
         # controller gains
-        self.gain = np.array([0.10,0.5,0.3,0.05]) 
+        self.gain = np.array([0.50,0.5,0.3,0.05]) 
 
         # yaw bias
         self.yaw_bias = 0.0
@@ -110,7 +110,14 @@ class Controller:
 	elif(self.target.position.x == 0.0 and self.target.position.y == 0.0 and self.target.position.z == 0.0):
             self.vel.linear.x = 0.0
 	    self.vel.linear.y = 0.0
+	    self.vel.linear.z = 0.0	
+	elif (self.target.position.x < 0 and abs(self.target.position.y)<0.1 and abs(self.target.position.z)<0.1 and abs(self.target.orientation.z) < 0.2 and self.target.position.y != 0.0 and self.target.position.z != 0.0 ):
+	    self.vel.linear.x = 0.0
+	    self.vel.linear.y = 0.0
 	    self.vel.linear.z = 0.0
+	    flag = Bool()
+	    flag.data = True
+	    self.flag_pub.publish(flag)
 	#if y_cmd > 0.15 :
         #    self.vel.linear.y = 0.15
         #elif y_cmd < -0.15:

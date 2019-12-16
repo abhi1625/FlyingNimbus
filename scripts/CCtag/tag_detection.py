@@ -327,8 +327,8 @@ class BullsEyeDetection:
 		dilated_edges = cv2.dilate(edges,kernel,iterations = 1)
 		# lines = cv2.HoughLines(edges,1,np.pi/180,30)
 		
-		# cv2.imshow('after threshold', dilated_edges)
-		# cv2.waitKey(1)
+		#cv2.imshow('after threshold', rand_thresh)
+		#cv2.waitKey(1)
 		# if(lines is not None):
 			# print("first hough lines shape",len(lines))
 		
@@ -370,10 +370,14 @@ class BullsEyeDetection:
 
 			center_mean= np.mean(self.centers,axis = 0)
 			if (center_mean[1]<0):
-				self.pose_obj.position.x = (-center_mean[1]/100)+1.1
+				self.pose_obj.position.x = (-center_mean[1]/100)+1.2
 			else:
 				self.pose_obj.position.x = (-center_mean[1])/100			#in m
-			self.pose_obj.position.y = (-center_mean[0]/100) + 0.5 	#in m
+			self.pose_obj.position.y = (-center_mean[0]/100) + 0.2 	#in m
+			if (abs(self.pose_obj.position.y)<0.4):
+				self.pose_obj.position.z = -((trans[2,0]/100) - 0.5)
+			else:
+				self.pose_obj.position.z = 0.000001
 			print(self.pose_obj.position.x, self.pose_obj.position.y)
 			# self.pose_obj.position.z = trans[2,0]  	#in m
 			# self.pose_obj.orientation.x = 0
