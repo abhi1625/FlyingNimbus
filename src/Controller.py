@@ -29,7 +29,7 @@ class Controller:
         self.curr_vel_odom = np.zeros((2,))
 
         # controller gains
-        self.gain = np.array([0.50,0.5,0.3,0.05]) 
+        self.gain = np.array([0.250,0.4,0.3,0.05]) 
 
         # yaw bias
         self.yaw_bias = 0.0

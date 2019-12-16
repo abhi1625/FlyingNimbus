@@ -230,12 +230,12 @@ class HeightControl(smach.State):
 
 	def execute(self, userdata):
 		
-		self.vel.position.x = 0.0
-		self.vel.position.y = 0.0
-		self.vel.position.z = 0.0
-		self.vel.orientation.x = 0.0
-		self.vel.orientation.y = 0.0
-		self.vel.orientation.z = 0.0
+		# self.vel.position.x = 0.0
+		# self.vel.position.y = 0.0
+		# self.vel.position.z = 0.0
+		# self.vel.orientation.x = 0.0
+		# self.vel.orientation.y = 0.0
+		# self.vel.orientation.z = 0.0
 		
 		flag_ob = Flag_sub()
 		rospy.loginfo("Preparing for bridge")
@@ -371,11 +371,11 @@ def main():
     with sm:
     # Add states to the container
 	#smach.StateMachine.add('TAKEOFF', TakeOff(1.8), transitions={'outcome2':'FIRSTWALL'})
-	smach.StateMachine.add('TAKEOFF',TakeOff(1.8), transitions={'outcome2':'FIRSTWALL'})
+	smach.StateMachine.add('TAKEOFF',TakeOff(1.0), transitions={'outcome2':'HEIGHT'})
 	#'HEIGHT'
-	# smach.StateMachine.add('HEIGHT', HeightControl(1.5), transitions={'outcome2':'FIRSTWALL'})
+	smach.StateMachine.add('HEIGHT', HeightControl(1.5), transitions={'outcome2':'FIRSTWALL'})
 
-    	smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), transitions={'outcome2':'WINDOWYAW'})
+    	smach.StateMachine.add('FIRSTWALL', Punch_forward(1.2), transitions={'outcome2':'WINDOWYAW'})
     	smach.StateMachine.add('WINDOWYAW',PrepareForBridge(1.5,2.6), transitions={'outcome2':'WINDOW'})
     	smach.StateMachine.add('WINDOW', WindowDetection(), transitions={'outcome2':'PUNCH'})
     	smach.StateMachine.add('PUNCH',Punch_forward(1.3), transitions={'outcome2':'PREP'})
