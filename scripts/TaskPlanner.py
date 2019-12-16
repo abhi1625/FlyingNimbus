@@ -379,14 +379,14 @@ def main():
     	smach.StateMachine.add('WINDOWYAW',PrepareForBridge(1.5,2.6), transitions={'outcome2':'WINDOW'})
     	smach.StateMachine.add('WINDOW', WindowDetection(), transitions={'outcome2':'PUNCH'})
     	smach.StateMachine.add('PUNCH',Punch_forward(1.3), transitions={'outcome2':'PREP'})
-    	smach.StateMachine.add('PREP',PrepareForBridge(1.5,3.2), transitions={'outcome2':'BRIDGE'})
+    	smach.StateMachine.add('PREP',PrepareForBridge(1.5,1.3), transitions={'outcome2':'BRIDGE'})
 
     	#not working as of now
-    	smach.StateMachine.add('PBRIDGE',Punch_forward(0.4), transitions={'outcome2':'BRIDGE'})
+    	# smach.StateMachine.add('PBRIDGE',Punch_forward(0.4), transitions={'outcome2':'BRIDGE'})
     	smach.StateMachine.add('BRIDGE',BridgeDetection(), transitions={'outcome2':'CROSSBRIDGE'})
-	smach.StateMachine.add('CROSSBRIDGE',Punch_forward(0.8), transitions={'outcome2':'YAWCC'})
+	smach.StateMachine.add('CROSSBRIDGE',Punch_forward(0.7), transitions={'outcome2':'YAWCC'})
 	smach.StateMachine.add('YAWCC', PrepareForBridge(1.5, 2.8), transitions={'outcome2':'CCTAGPUNCH'})
-	smach.StateMachine.add('CCTAGPUNCH',Punch_forward(0.4), transitions={'outcome2':'CCTAG'})
+	smach.StateMachine.add('CCTAGPUNCH',Punch_forward(0.5), transitions={'outcome2':'CCTAG'})
     	smach.StateMachine.add('CCTAG', CCTagDetection(), transitions={'outcome2':'LANDF'})
     	smach.StateMachine.add('LANDF', Land(),transitions={'outcome2':'TAKEOFF2'})	
     	smach.StateMachine.add('TAKEOFF2', TakeOff(1.0),transitions={'outcome2':'YAW'})
