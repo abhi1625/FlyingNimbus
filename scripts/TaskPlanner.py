@@ -377,11 +377,10 @@ def main():
 	rospy.sleep(15)
 
 
-	
-    	smach.StateMachine.add('FIRSTWALL', Punch_forward(1.2), transitions={'outcome2':'WINDOW'})
-    	smach.StateMachine.add('WINDOWYAW',PrepareForBridge(1.5,1.5), transitions={'outcome2':'WINDOW'})
+    	smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), transitions={'outcome2':'WINDOWYAW'})
+    	smach.StateMachine.add('WINDOWYAW',PrepareForBridge(1.5,2.6), transitions={'outcome2':'WINDOW'})
     	smach.StateMachine.add('WINDOW', WindowDetection(), transitions={'outcome2':'PUNCH'})
-    	smach.StateMachine.add('PUNCH',Punch_forward(1.5), transitions={'outcome2':'PREP'})
+    	smach.StateMachine.add('PUNCH',Punch_forward(1.3), transitions={'outcome2':'PREP'})
     	smach.StateMachine.add('PREP',PrepareForBridge(1.5,3.2), transitions={'outcome2':'BRIDGE'})
 
     	#not working as of now
