@@ -187,14 +187,21 @@ class PrepareForBridge(smach.State):
 		flag = Bool()
 		flag.data = False
 		flag_ob.flag_pub.publish(flag)
+		#if (self.yaw_err) <0.0:
+		#	yaw_cmd = -6.0
+		#else:
+		#		yaw_cmd = 6.0
+		#self.yaw_err = abs(self.yaw_err)
 		while(not(abs(self.h_reff - self.curr_state.position.z)<=0.08 and abs(self.yaw_err)<=0.2) and not rospy.is_shutdown()):
 			# print("this is a test")
 			self.vel.position.z = self.h_reff - self.curr_state.position.z
-			self.vel.orientation.z = -6.0 #self.yaw_err
+			self.vel.orientation.z = -6.0
 			self.pose_pub.publish(self.vel)
-			self.yaw_err -= 0.2
+			self.yaw_err += 0.2
 			rate.sleep()
 		self.vel.position.z = 0.0
+		self.vel.position.x = 0.0
+		self.vel.position.y = 0.0
 		self.vel.orientation.z = 0.0
 		self.pose_pub.publish(self.vel)	
 		return 'outcome2'
@@ -281,11 +288,16 @@ class Land(smach.State):
 	def __init__(self):
 		smach.State.__init__(self,outcomes=['outcome2'])
 		self.land_pub = rospy.Publisher('/bebop/land', Empty, queue_size=1 , latch=True)
-		
+		self.flag_pub = rospy.Publisher('/relative_pose',Pose, queue_size=1,latch=True)
 	def execute(self,userdata):
-		rospy.sleep(2)
+		#rospy.sleep(2)
 		rospy.loginfo('Executing landing command')
 		self.land_pub.publish()
+		pose_flag = Pose()
+		pose_flag.position.x = 2.0
+		pose_flag.position.y = 2.0
+		pose_flag.position.z = 2.0
+		self.flag_pub.publish(pose_flag)
 		rospy.sleep(5)
 		return 'outcome2'
 
@@ -311,8 +323,9 @@ def main():
     	#print("This was a success 2")
     	#smach.StateMachine.add('PREP',PrepareForBridge(0.4,1.2), transitions={'outcome2':'SMend'})
     	smach.StateMachine.add('LANDF', Land(),transitions={'outcome2':'TAKEOFF2'})	
-    	smach.StateMachine.add('TAKEOFF2', TakeOff(0.9),transitions={'outcome2':'SECONDWALL'})	
-    	smach.StateMachine.add('SECONDWALL', Punch_forward(1.2),transitions={'outcome2':'TAG2'})
+    	smach.StateMachine.add('TAKEOFF2', TakeOff(0.9),transitions={'outcome2':'YAW'})
+	smach.StateMachine.add('YAW',PrepareForBridge(0.9,-0.7), transitions={'outcome2':'SECONDWALL'})	
+    	smach.StateMachine.add('SECONDWALL', Punch_forward(1.5),transitions={'outcome2':'TAG2'})
     	smach.StateMachine.add('TAG2', CCTagDetection(),transitions={'outcome2':'LANDF2'})	
     	smach.StateMachine.add('LANDF2', Land(),transitions={'outcome2':'SMend'})
 	
