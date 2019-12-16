@@ -147,7 +147,10 @@ class Controller:
 	#print(self.vel.linear.y)
         
 	#print("final x = {}, y = {}, z = {}, yaw = {}".format(self.vel.linear.x,self.vel.linear.y,self.vel.linear.z, self.vel.angular.z))
-	self.cmd_pub.publish(self.vel)
+	if (self.target.position.x == self.target.position.y == self.target.position.z == 2.0):
+		print("landing")
+	else:
+		self.cmd_pub.publish(self.vel)
         self.curr_vel_odom[0] = self.state.position.x 
         self.curr_vel_odom[1] = self.state.position.y
         return x_cmd

@@ -6,7 +6,7 @@ from Window_detection.window_detection import video_stream
 from Wall_detection.video_stream import video_stream as vid_stream
 from CCtag.tag_detection import BullsEyeDetection
 from geometry_msgs.msg import Twist, Pose
-from Bridge_detection.river import StereoVO
+from Bridge_detection.bridge_detection import video_stream as bridge_test
 # define state takeoff
 class Flag_sub:
 	def __init__(self):
@@ -196,8 +196,10 @@ class PrepareForBridge(smach.State):
 			# print("this is a test")
 			self.vel.position.z = self.h_reff - self.curr_state.position.z
 			self.vel.orientation.z = -6.0
+			self.vel.position.y = -0.1
+			self.vel.position.x = 0.2
 			self.pose_pub.publish(self.vel)
-			self.yaw_err += 0.2
+			self.yaw_err -= 0.2
 			rate.sleep()
 		self.vel.position.z = 0.0
 		self.vel.position.x = 0.0
@@ -210,19 +212,19 @@ class PrepareForBridge(smach.State):
 class BridgeDetection(smach.State):
 	def __init__(self):
 		smach.State.__init__(self,outcomes=['outcome2'])
-		self.StereoVO_obj = StereoVO()
+		self.StereoVO_obj = bridge_test()
 
 
 	def execute(self, userdata):
 		rospy.loginfo("Executing Bridge detection")
 		# call Bridge detection script
-		rate = rospy.Rate(10)
+		rate = rospy.Rate(30)
 		flag_ob = Flag_sub()
 		flag = Bool()
 		flag.data = False
 		flag_ob.flag_pub.publish(flag)
 		while(not rospy.is_shutdown()):
-			self.StereoVO_obj.run_pipeline()
+			self.StereoVO_obj.execute()
 			rate.sleep()
 			if(flag_ob.flag.data):
 				return 'outcome2'
@@ -240,14 +242,13 @@ class CCTagDetection(smach.State):
 	def execute(self, userdata):
 		rospy.loginfo("Executing CCTag detection")
 		# call CCTag detection script
-		rate = rospy.Rate(10)
+		rate = rospy.Rate(30)
 		flag_ob = Flag_sub()
 		flag = Bool()
 		flag.data = False
 		print("success")
 		flag_ob.flag_pub.publish(flag)
 		while(not rospy.is_shutdown()):
-			# print("exit flag",flag_ob.flag.data)
 			self.tag_ob.run_pipeline()
 			rate.sleep()
 			if(flag_ob.flag.data):
@@ -312,16 +313,18 @@ def main():
     # Open the container
     with sm:
     # Add states to the container
-	smach.StateMachine.add('TAKEOFF', TakeOff(1.5), transitions={'outcome2':'CCTAG'})
+	smach.StateMachine.add('TAKEOFF', TakeOff(1.5), transitions={'outcome2':'BRIDGE'})
 	#rospy.sleep(15)
-    	smach.StateMachine.add('CCTAG', CCTagDetection(), transitions={'outcome2':'LANDF'})
-    	#smach.StateMachine.add('BRIDGE',BridgeDetection(), transitions={'outcome2':'SMend'})
+    	smach.StateMachine.add('BRIDGE',BridgeDetection(), transitions={'outcome2':'CROSSBRIDGE'})
     	#smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), transitions={'outcome2':'WINDOW'})
     	#smach.StateMachine.add('WINDOW', WindowDetection(), transitions={'outcome2':'PUNCH'})
     	##rospy.sleep(2)		#print("This was a success")
     	#smach.StateMachine.add('PUNCH',Punch_forward(1.5), transitions={'outcome2':'PREP'})
     	#print("This was a success 2")
     	#smach.StateMachine.add('PREP',PrepareForBridge(0.4,1.2), transitions={'outcome2':'SMend'})
+	smach.StateMachine.add('CROSSBRIDGE',Punch_forward(0.8), transitions={'outcome2':'YAWCC'})
+	smach.StateMachine.add('YAWCC', PrepareForBridge(1.7, 1.2), transitions={'outcome2':'CCTAG'})
+    	smach.StateMachine.add('CCTAG', CCTagDetection(), transitions={'outcome2':'LANDF'})
     	smach.StateMachine.add('LANDF', Land(),transitions={'outcome2':'TAKEOFF2'})	
     	smach.StateMachine.add('TAKEOFF2', TakeOff(0.9),transitions={'outcome2':'YAW'})
 	smach.StateMachine.add('YAW',PrepareForBridge(0.9,-0.7), transitions={'outcome2':'SECONDWALL'})	

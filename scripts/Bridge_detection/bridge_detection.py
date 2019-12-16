@@ -16,6 +16,7 @@ import cv2
 import numpy as np
 import math
 import copy
+from std_msgs.msg import Bool
 # from GMM.test_data import *
 
 class video_stream:
@@ -79,8 +80,8 @@ class bridge_detection:
 		self.bottom_right = np.array([0,0])
 		self.height_offset = 1.0
 		self.sliding_window_len = 3
-
-
+		self.exit_flag = rospy.Publisher('/exit_flag',Bool, queue_size =1)
+	
 
 	def detect_blobs(self,im):
 		# Setup SimpleBlobDetector parameters.
@@ -93,7 +94,7 @@ class bridge_detection:
 		 
 		# Filter by Area.
 		params.filterByArea = True
-		params.minArea = 3000
+		params.minArea = 2000
 		params.maxArea = 100000
 		 
 		# Filter by Circularity
@@ -126,9 +127,9 @@ class bridge_detection:
 		im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
 		# Show blobs
-		cv2.imshow("Keypoints", im_with_keypoints)
-		cv2.waitKey(0)
-		cv2.destroyAllWindows()
+		# cv2.imshow("Keypoints", im_with_keypoints)
+		# cv2.waitKey(1)
+		#cv2.destroyAllWindows()
 		return keypoints
 
 	def segment_window(self,cv_image):
@@ -157,7 +158,7 @@ class bridge_detection:
 					# print(keypoints[0].pt[0])
 					quadrent = self.find_quadrent(np.array([keypoints[0].pt[0],keypoints[0].pt[1]]))
 					# print(keypoints[0].pt[1])
-
+					print("detected 1")
 					if quadrent == 1:
 						self.rel_pose.position.x = 0.0
 						self.rel_pose.position.y = 0.0
@@ -167,12 +168,15 @@ class bridge_detection:
 						self.rel_pose.orientation.z = -0.02
 			elif(len(keypoints) == 2):
 				# calculate yaw and mean 
+				print("detected 2")
+				
+
 				cx1 = keypoints[0].pt[0]
 				cy1 = keypoints[0].pt[1]
 				cx2 = keypoints[1].pt[0]
 				cy2 = keypoints[1].pt[1]
 
-				cxf = ((cx1+cx2)/2-640.0/2)/(640.0/2)
+				cxf = (((cx1+cx2)/2)-(640.0/2))/(640.0/2)
 				cyf = ((cy1+cy2)/2-480.0/2)/(480.0/2)
 				print("find error")
 				slope = math.atan2((cy2-cy1),(cx2-cx1))
@@ -183,21 +187,31 @@ class bridge_detection:
 				self.rel_pose.orientation.x = 0.0
 				self.rel_pose.orientation.y = 0.0
 				if slope>2.0:
-					self.rel_pose.orientation.z = 2.0
+					self.rel_pose.orientation.z = 0.1
 				elif slope<-2.0:
-					self.rel_pose.orientation.z = -2.0
+					self.rel_pose.orientation.z = -0.1
 
 
 		else:
 			self.rel_pose.position.x = 0.0
 			self.rel_pose.position.y = 0.0
-			self.rel_pose.position.z = 0.05
+			self.rel_pose.position.z = 0.1
 			self.rel_pose.orientation.x = 0.0
 			self.rel_pose.orientation.y = 0.0
 			self.rel_pose.orientation.z = 0.0
 
 
-
+		if (self.rel_pose.position.x >0.0):
+			self.rel_pose.position.x += 1.2
+		self.rel_pose.position.y += 0.4
+		if (self.rel_pose.position.y !=0.0 and  abs(self.rel_pose.position.y)<0.35):
+			flag = Bool()
+			flag.data = True
+			self.rel_pose.position.x = 0.0
+			self.rel_pose.position.y = 0.0
+			self.rel_pose.position.z = 0.0 
+			self.exit_flag.publish(flag)
+		self.pose_pub.publish(self.rel_pose)
 
 
 
