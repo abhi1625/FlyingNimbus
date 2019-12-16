@@ -299,15 +299,16 @@ def main():
     # Open the container
     with sm:
     # Add states to the container
-	smach.StateMachine.add('TAKEOFF', TakeOff(0.4), transitions={'outcome2':'BRIDGE'})
+	smach.StateMachine.add('TAKEOFF', TakeOff(1.5), transitions={'outcome2':'CCTAG'})
+	#rospy.sleep(15)
     	smach.StateMachine.add('CCTAG', CCTagDetection(), transitions={'outcome2':'SMend'})
-    	smach.StateMachine.add('BRIDGE',BridgeDetection(), transitions={'outcome2':'SMend'})
-    	smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), transitions={'outcome2':'WINDOW'})
-    	smach.StateMachine.add('WINDOW', WindowDetection(), transitions={'outcome2':'PUNCH'})
-    	#rospy.sleep(2)		#print("This was a success")
-    	smach.StateMachine.add('PUNCH',Punch_forward(1.5), transitions={'outcome2':'PREP'})
-    	print("This was a success 2")
-    	smach.StateMachine.add('PREP',PrepareForBridge(0.4,1.2), transitions={'outcome2':'SMend'})
+    	#smach.StateMachine.add('BRIDGE',BridgeDetection(), transitions={'outcome2':'SMend'})
+    	#smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), transitions={'outcome2':'WINDOW'})
+    	#smach.StateMachine.add('WINDOW', WindowDetection(), transitions={'outcome2':'PUNCH'})
+    	##rospy.sleep(2)		#print("This was a success")
+    	#smach.StateMachine.add('PUNCH',Punch_forward(1.5), transitions={'outcome2':'PREP'})
+    	#print("This was a success 2")
+    	#smach.StateMachine.add('PREP',PrepareForBridge(0.4,1.2), transitions={'outcome2':'SMend'})
     	smach.StateMachine.add('LANDF', Land(),transitions={'outcome2':'SMend'})
 
     # Execute SMACH plan

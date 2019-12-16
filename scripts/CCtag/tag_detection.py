@@ -34,7 +34,7 @@ class BullsEyeDetection:
 		self.detect_flag = True
 		#self.detect_sub = rospy.Subscriber("/cctag_detect", Bool, self.detect_flag_cb)
 		self.centers = np.zeros((1,2))
-		self.filter_len = 5
+		self.filter_len = 2
 
 	def detect_flag_cb(self,data):
 		self.detect_flag = data.data
@@ -217,33 +217,36 @@ class BullsEyeDetection:
 		# World coordinates using window measurement in world
 		long_side = 76/2
 		short_side = 50/2
-		objPoints = np.array([[-long_side,short_side,0],\
-									[long_side,short_side,0],\
-									[long_side,-short_side,0], \
-									[-long_side,-short_side,0]], dtype=np.float64)
-		print("obj points ",objPoints)
-		print("img points", imgPoints.astype(np.float64))
-		# Camera K matrix(intrinsic params)
-		camMatrix = np.array([[103.97, 0 , 208.105],[0, 103.97, 114.713],[0,0,1]],dtype=np.float64)
+		objPoints = np.array([[-long_side,-short_side,0],\
+									[long_side,-short_side,0],\
+									[long_side,short_side,0], \
+									[-long_side,short_side,0]], dtype=np.float64)
+		# print("obj points ",objPoints)
+		# print("img points", imgPoints.astype(np.float64))
+		# # Camera K matrix(intrinsic params)
+		camMatrix = np.array([[103.97, 0 , 320.0],[0, 103.97, 240.0],[0,0,1]],dtype=np.float64)
 
 		#distortion coefficients 
 		distCoeffs = np.array([0,0,0,0,0],dtype=np.float64)
 
 		_, rotVec, transVec = cv2.solvePnP(objPoints,imgPoints.astype(np.float64), camMatrix, distCoeffs)
-
+		# print("transVector ",transVec)
 		# Verification by reporjecting points using rotation and 
 		# translation computed above
-		reprojPoints,_ = cv2.projectPoints(objPoints, rotVec, transVec, camMatrix, distCoeffs)
-		reprojPoints = np.squeeze(reprojPoints)
+		# reprojPoints,_ = cv2.projectPoints(objPoints, rotVec, transVec, camMatrix, distCoeffs)
+		# reprojPoints = np.squeeze(reprojPoints)
 		# print(reprojPoints.shape)
 
-		for i in range(4):
-		        pt = reprojPoints[i]
-		        imgpt = imgPoints[i]
-		        cv2.circle(img, (int(pt[0]), int(pt[1])),5,[255,0,0],-1)
-		        # cv2.circle(img, (int(imgpt[0]),int(imgpt[1])),5,[0,255,0],-1)
+		# for i in range(4):
+		#         pt = reprojPoints[i]
+		#         imgpt = imgPoints[i]
+		#         cv2.circle(img, (int(pt[0]), int(pt[1])),5,[255,0,0],-1)
+		#         cv2.circle(img, (int(imgpt[0]),int(imgpt[1])),5,[0,255,0],-1)
+		#         cv2.circle(img, (0,0), 10, [255,0,255],-1)
 		# cv2.imshow('reprojected',img)
+		# print("img_shape ",img.shape )
 		# cv2.waitKey(1)
+		# input("aa")
 		# cv2.destroyAllWindows()
 
 		return rotVec,transVec
@@ -322,67 +325,71 @@ class BullsEyeDetection:
 		edges = cv2.Canny(rand_thresh,50,150,apertureSize = 3)
 		kernel = np.ones((2,2),np.uint8)
 		dilated_edges = cv2.dilate(edges,kernel,iterations = 1)
-		lines = cv2.HoughLines(edges,1,np.pi/180,30)
+		# lines = cv2.HoughLines(edges,1,np.pi/180,30)
 		
 		# cv2.imshow('after threshold', dilated_edges)
 		# cv2.waitKey(1)
-		if(lines is not None):
+		# if(lines is not None):
 			# print("first hough lines shape",len(lines))
 		
-			i,contours,h = cv2.findContours(dilated_edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-			max_w = 0
-			max_h = 0
-			iter_ = -1
-			count = 0
-			# print("contours",np.shape(contours))
-			for i,c1 in enumerate(contours):
-				# print i
-				# print("c1 = ", c1)
-				(x,y,we,he) = cv2.boundingRect(c1)
-				# print("bb params = ",x,y,we,he)
+		i,contours,h = cv2.findContours(dilated_edges,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+		max_w = 0
+		max_h = 0
+		iter_ = -1
+		count = 0
+		# print("contours",np.shape(contours))
+		for i,c1 in enumerate(contours):
+			# print i
+			# print("c1 = ", c1)
+			(x,y,we,he) = cv2.boundingRect(c1)
+			# print("bb params = ",x,y,we,he)
 
-				if len(c1)>4 and (we > 10 and he > 10):
-						if he>max_h or we>max_w:
-							max_h = he
-							max_w = we
-							iter_=i
-						count+=1
-			stencil = np.zeros(edges.shape).astype(edges.dtype)
-			color = [255, 255, 255]
-			cv2.fillPoly(stencil, contours[iter_], color)
-			hough_status, rect_corners = self.rect_mask(stencil,edges)
-			# hough_status,houg_lines = self.get_hough_lines(stencil)
-			if(hough_status):
-				try:
-					rot,trans = self.pnp(rect_corners,img)
-					# print("transVec shape = ", trans.shape,trans)
-					# trans = np.reshape(trans,(3,1))
-					# print("centers shape = ", self.centers.shape)
+			if len(c1)>4 and (we > 10 and he > 10):
+					if he>max_h or we>max_w:
+						max_h = he
+						max_w = we
+						iter_=i
+					count+=1
+		stencil = np.zeros(edges.shape).astype(edges.dtype)
+		color = [255, 255, 255]
+		cv2.fillPoly(stencil, contours[iter_], color)
+		hough_status, rect_corners = self.rect_mask(stencil,edges)
+		print(hough_status)
+		# hough_status,houg_lines = self.get_hough_lines(stencil)
+		if(hough_status):
+			rot,trans = self.pnp(rect_corners,img)
+			print("transVec shape = ", trans.shape,trans)
+			# trans = np.reshape(trans,(3,1))
+			# print("centers shape = ", self.centers.shape)
 
-					if(self.centers.shape[0]<self.filter_len):
-						self.centers = np.vstack((self.centers,np.array([trans[0,0],trans[1,0]])))
-					else:
-						self.centers = np.vstack((self.centers,np.array([trans[0,0],trans[1,0]])))
-						self.centers = np.delete(self.centers,0,0)
-
-					center_mean= np.mean(self.centers,axis = 0)
-					self.pose_obj.position.x = center_mean[0]			#in m
-					self.pose_obj.position.y = center_mean[1] 	#in m
-					# self.pose_obj.position.z = trans[2,0]  	#in m
-					# self.pose_obj.orientation.x = 0
-					# self.pose_obj.orientation.y = 0
-					# self.pose_obj.orientation.z = 0
-					# print("state x,y,z",self.pose_obj.position.x,self.pose_obj.position.y,self.pose_obj.position.z)
-					# self.pose_pub.publish(self.pose_obj)
-					# cv2.imshow("warped img",im_out)
-					# cv2.waitKey(0)
-					# cv2.destroyAllWindows()
-
-					# print("I was able to detect outer rectangle")
-				except:
-					pass
+			if(self.centers.shape[0]<self.filter_len):
+				self.centers = np.vstack((self.centers,np.array([trans[0,0],trans[1,0]])))
 			else:
-				print("outer rectangle not detected")
+				self.centers = np.vstack((self.centers,np.array([trans[0,0],trans[1,0]])))
+				self.centers = np.delete(self.centers,0,0)
+
+			center_mean= np.mean(self.centers,axis = 0)
+			if (center_mean[1]<0):
+				self.pose_obj.position.x = (-center_mean[1]/100)+1.1
+			else:
+				self.pose_obj.position.x = (-center_mean[1])/100			#in m
+			self.pose_obj.position.y = (-center_mean[0]/100) + 0.5 	#in m
+			print(self.pose_obj.position.x, self.pose_obj.position.y)
+			# self.pose_obj.position.z = trans[2,0]  	#in m
+			# self.pose_obj.orientation.x = 0
+			# self.pose_obj.orientation.y = 0
+			# self.pose_obj.orientation.z = 0
+			# print("state x,y,z",self.pose_obj.position.x,self.pose_obj.position.y,self.pose_obj.position.z)
+			# self.pose_pub.publish(self.pose_obj)
+			# cv2.imshow("warped img",im_out)
+			# cv2.waitKey(0)
+			# cv2.destroyAllWindows()
+
+			# print("I was able to detect outer rectangle")
+			# except:
+			# 	pass
+		else:
+			print("outer rectangle not detected")
 
 
 				
@@ -412,33 +419,33 @@ class BullsEyeDetection:
 		circles = cv2.HoughCircles(eroded_img,cv2.HOUGH_GRADIENT,1,10,param1=150,param2=50,minRadius=0,maxRadius=0)
 		# print("circles = ",circles)
 		                #input("aaa")
-		if(circles is not None):
+		# if(circles is not None):
 				
-			circles = np.uint16(np.around(circles))
-			circles = np.squeeze(circles)
-			print("circle shape = ",circles.shape)
-			if (circles.shape[0] == 3):
-			        # draw the outer circle
-			    cv2.circle(img_three,(circles[0],circles[1]),circles[2],(0,255,0),2)
-			    # draw the center of the circle
-			    cv2.circle(img_three,(circles[0],circles[1]),2,(0,0,255),3)
-			else:
+		# 	circles = np.uint16(np.around(circles))
+		# 	circles = np.squeeze(circles)
+		# 	print("circle shape = ",circles.shape)
+			# if (circles.shape[0] == 3):
+			#         # draw the outer circle
+			#     cv2.circle(img_three,(circles[0],circles[1]),circles[2],(0,255,0),2)
+			#     # draw the center of the circle
+			#     cv2.circle(img_three,(circles[0],circles[1]),2,(0,0,255),3)
+			# else:
 
-				for i in circles:
-				        # draw the outer circle
-				    cv2.circle(img_three,(i[0],i[1]),i[2],(0,255,0),2)
-				    # draw the center of the circle
-				    cv2.circle(img_three,(i[0],i[1]),2,(0,0,255),3)
+			# 	for i in circles:
+			# 	        # draw the outer circle
+			# 	    cv2.circle(img_three,(i[0],i[1]),i[2],(0,255,0),2)
+			# 	    # draw the center of the circle
+			# 	    cv2.circle(img_three,(i[0],i[1]),2,(0,0,255),3)
 			# cv2.imshow('circles', img_three)
-			# cv2.waitKey(0)
+			# cv2.waitKey(1)
 			# cv2.destroyAllWindows()
 			# input("ad")
-			max_w = 0
-			max_h = 0
-			iter_ = -1
-			count = 0
-		else:
-			print("no circles detected")
+		max_w = 0
+		max_h = 0
+		iter_ = -1
+		count = 0
+		# else:
+		# 	print("no circles detected")
 		
 		# cv2.imshow('cimg', cimg)
 		# cv2.waitKey(0)
@@ -449,14 +456,15 @@ class BullsEyeDetection:
 			if self.image is not None:
 				# cv2.imshow('cb', self.image)
 				# cv2.waitKey(1)
+				self.image = cv2.flip(self.image,1)
 				self.detect_ellipse_fitellipse(self.image)
 				print("detecting")
 
 			else:
 				print("No image published")
-			center_mean= np.mean(self.centers,axis = 0)
-			self.pose_obj.position.x = (center_mean[0]/100) + 0.5			#in m
-			self.pose_obj.position.y = center_mean[1]/100
+			# center_mean= np.mean(self.centers,axis = 0)
+			# self.pose_obj.position.x = (-center_mean[1]/100)+1.2		#in m
+			# self.pose_obj.position.y = -center_mean[0]/100
 			self.pose_pub.publish(self.pose_obj)
 		else:
 			print("Node on stand")
