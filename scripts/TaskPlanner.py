@@ -370,12 +370,10 @@ def main():
     # Open the container
     with sm:
     # Add states to the container
-	smach.StateMachine.add('TAKEOFF', TakeOff(1.8), transitions={'outcome2':'FIRSTWALL'})
-
+	#smach.StateMachine.add('TAKEOFF', TakeOff(1.8), transitions={'outcome2':'FIRSTWALL'})
+	smach.StateMachine.add('TAKEOFF',TakeOff(1.8), transitions={'outcome2':'FIRSTWALL'})
 	#'HEIGHT'
 	# smach.StateMachine.add('HEIGHT', HeightControl(1.5), transitions={'outcome2':'FIRSTWALL'})
-	rospy.sleep(15)
-
 
     	smach.StateMachine.add('FIRSTWALL', Punch_forward(1.5), transitions={'outcome2':'WINDOWYAW'})
     	smach.StateMachine.add('WINDOWYAW',PrepareForBridge(1.5,2.6), transitions={'outcome2':'WINDOW'})
