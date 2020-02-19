@@ -7,6 +7,9 @@ The final project in the ENAE788M course requires us to complete the following c
 ![track](images/Track.png)
 
 This is to be done using the hardware setup provided in the course, the details of which can be found [here](https://github.com/prgumd/PRGFlyt/wiki/PRGHusky). Once you setup the hacked bebop quadrotor follow the instructions to run the course
+
+## Submission Video
+[![Alt text](https://img.youtube.com/vi/VID/0.jpg)](https://www.youtube.com/watch?v=W-hJahoFFmI)
 ## Required Dependencies
 
 ## Using this repo
